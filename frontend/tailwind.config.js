@@ -9,9 +9,11 @@ export default {
         'mint-light': '#E6F9F4',
         'mint-dark': '#0D9488',
         'mint-mid': '#1BB88A',
-        'surface-soft': '#F9FAFB',
-        border: '#F2F4F7',
+        surface: '#F8FAFC',
+        'surface-soft': '#F1F5F9',
+        border: '#E2E8F0',
         'border-strong': '#E4E7EC',
+        faint: '#94A3B8',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
