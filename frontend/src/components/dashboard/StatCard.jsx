@@ -38,7 +38,7 @@ export default function StatCard({
 
       {/* Main number */}
       <div className="stat-number text-ink">
-        <AnimatedNumber value={value} decimals={decimals} suffix={suffix} />
+        <AnimatedNumber value={parseFloat(value) || 0} decimals={decimals} suffix={suffix} />
       </div>
 
       {/* Sub-stats */}
