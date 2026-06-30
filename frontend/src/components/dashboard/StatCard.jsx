@@ -21,7 +21,8 @@ export default function StatCard({
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.15 }}
-      className="bg-white border border-border rounded-2xl shadow-card hover:shadow-lift transition-shadow duration-150 p-4 flex flex-col gap-3 cursor-default"
+      className="card p-5 flex flex-col gap-3 cursor-default"
+      style={{ borderLeft: `3px solid ${progressColor}` }}
     >
       {/* Header row */}
       <div className="flex items-center justify-between">
@@ -37,13 +38,13 @@ export default function StatCard({
       </div>
 
       {/* Main number */}
-      <div className="stat-number text-ink">
+      <div className="stat-number">
         <AnimatedNumber value={parseFloat(value) || 0} decimals={decimals} suffix={suffix} />
       </div>
 
       {/* Sub-stats */}
       {subStats.length > 0 && (
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           {subStats.map((s) => (
             <div key={s.label} className="flex items-baseline gap-1">
               <span className="text-sm font-bold text-ink">{s.value}</span>
@@ -54,7 +55,7 @@ export default function StatCard({
       )}
 
       {/* Spark bars */}
-      {sparkData.length > 0 && <SparkBar data={sparkData} height={32} />}
+      {sparkData.length > 0 && <SparkBar data={sparkData} height={40} />}
 
       {/* Progress bar */}
       <div

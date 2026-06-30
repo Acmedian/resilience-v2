@@ -26,11 +26,11 @@ export default function SparkLineCard({
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.15 }}
-      className="bg-white border border-border rounded-2xl shadow-card hover:shadow-lift transition-shadow duration-150 p-4 flex flex-col gap-3 cursor-default"
+      className="card-hover p-4 flex flex-col gap-3 cursor-default"
     >
       <div>
         <p className="text-xs font-medium text-slate-500 mb-0.5">{title}</p>
-        <p className="text-3xl font-extrabold text-ink tracking-tight leading-none">
+        <p className="stat-number">
           {value}
           <span className="text-lg font-semibold text-slate-400 ml-0.5">{suffix}</span>
         </p>
@@ -47,8 +47,10 @@ export default function SparkLineCard({
         </div>
       )}
 
-      <div className="h-16">
-        <SparkLine data={sparkData} width={260} height={64} color="#2DD4A0" />
+      <div className="bg-[#FAFBFC] rounded-xl p-2">
+        <div className="h-16">
+          <SparkLine data={sparkData} width={260} height={64} color="#2DD4A0" />
+        </div>
       </div>
 
       <XLabels labels={xLabels} count={sparkData.length} />

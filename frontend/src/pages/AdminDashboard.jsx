@@ -28,7 +28,7 @@ export default function AdminDashboard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}
-      className="flex gap-4 p-5 min-h-[calc(100vh-56px)] bg-surface"
+      className="flex gap-4 p-6 min-h-screen bg-[#F0F2F7]"
     >
       {/* Left column */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
@@ -40,8 +40,12 @@ export default function AdminDashboard() {
         {/* Page header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-ink leading-tight">Overview</h1>
-            <p className="text-sm text-slate-400 mt-0.5">Sunday, June 29, 2026</p>
+            <h1 className="text-[32px] font-black text-ink leading-tight">Overview Panel</h1>
+            <p className="text-sm text-slate-400 mt-0.5 flex items-center gap-2">
+              <span className="bg-white border border-border rounded-full px-3 py-1 text-xs text-text-muted shadow-card">
+                June 29, 2026
+              </span>
+            </p>
           </div>
         </div>
 
@@ -50,7 +54,7 @@ export default function AdminDashboard() {
           variants={staggerContainer}
           initial="initial"
           animate="animate"
-          className="grid grid-cols-2 gap-3"
+          className="grid grid-cols-2 gap-4"
         >
           {MOCK_STATS.map((stat) => (
             <motion.div key={stat.id} variants={cardVariants}>
@@ -60,7 +64,7 @@ export default function AdminDashboard() {
         </motion.div>
 
         {/* SparkLine cards side by side */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <SparkLineCard {...MOCK_SPARKLINES.resilience} />
           <SparkLineCard {...MOCK_SPARKLINES.participation} />
         </div>
@@ -76,7 +80,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* Right column — AI Panel fixed 260px */}
-      <div className="w-[260px] shrink-0">
+      <div
+        className="w-[260px] shrink-0 rounded-2xl overflow-hidden"
+        style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}
+      >
         <AIPanel messages={MOCK_AI_MESSAGES} />
       </div>
     </motion.div>

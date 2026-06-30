@@ -13,13 +13,13 @@ export default function InsightBanner({ children }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6, scale: 0.98 }}
           transition={{ duration: 0.2 }}
-          className="insight-glow rounded-2xl px-4 py-3 flex items-center gap-3"
+          className="insight-glow flex items-center gap-3"
         >
-          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-mint/20 shrink-0">
-            <Zap size={13} className="text-mint-dark" fill="#0D9488" />
+          <div className="w-8 h-8 rounded-full bg-mint-light flex items-center justify-center flex-shrink-0">
+            <Zap size={14} className="text-mint-dark" fill="#0D9488" />
           </div>
 
-          <p className="text-sm text-ink flex-1 leading-relaxed">{children}</p>
+          <p className="text-sm leading-relaxed text-text-secondary flex-1">{children}</p>
 
           <button
             onClick={() => setDismissed(true)}

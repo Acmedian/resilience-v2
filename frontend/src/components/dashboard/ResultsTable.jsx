@@ -3,7 +3,7 @@ import { Flag, Download } from 'lucide-react'
 function ScoreBadge({ score }) {
   if (score > 70) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-mint-light text-mint-dark">
+      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-mint-light text-mint-dark">
         <span className="w-1.5 h-1.5 rounded-full bg-mint inline-block" />
         {score}
       </span>
@@ -11,14 +11,14 @@ function ScoreBadge({ score }) {
   }
   if (score >= 40) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-600">
+      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
         {score}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600">
+    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600">
       <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
       {score}
     </span>
@@ -45,7 +45,7 @@ export default function ResultsTable({ results = [] }) {
         <h3 className="text-sm font-semibold text-ink">Recent Results</h3>
         <button
           onClick={() => exportCSV(results)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ink text-white text-xs font-semibold hover:bg-ink/90 transition-colors duration-150"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ink text-white text-xs font-semibold hover:bg-mint-dark transition-colors duration-150"
         >
           <Download size={12} />
           Export CSV
@@ -55,7 +55,7 @@ export default function ResultsTable({ results = [] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50 text-[11px] text-slate-400 font-semibold uppercase tracking-wide">
+            <tr className="bg-[#F8F9FB] text-[11px] text-slate-400 font-semibold uppercase tracking-wide">
               <th className="text-left px-5 py-2.5">Participant</th>
               <th className="text-left px-5 py-2.5">Survey</th>
               <th className="text-left px-5 py-2.5">Score</th>
@@ -68,7 +68,7 @@ export default function ResultsTable({ results = [] }) {
             {results.map((r) => (
               <tr
                 key={r.id}
-                className="border-t border-border hover:bg-surface-soft transition-colors duration-150"
+                className="border-t border-border hover:bg-[#F8FDF9] transition-colors duration-150"
               >
                 <td className="px-5 py-3 font-medium text-ink">{r.participant}</td>
                 <td className="px-5 py-3 text-slate-500">{r.survey}</td>
