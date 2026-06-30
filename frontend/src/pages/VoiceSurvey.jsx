@@ -102,7 +102,7 @@ export default function VoiceSurvey() {
         </div>
 
         <div className="flex-1 mx-4">
-          <p className="text-xs text-white/40 mb-1 font-medium">Weekly Check-in · Q{qIndex + 1}/{QUESTIONS.length}</p>
+          <p className="text-xs text-white/40 mb-1 font-medium">Weekly Screening · Q{qIndex + 1}/{QUESTIONS.length}</p>
           <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
             <motion.div
               className="h-full rounded-full bg-mint"

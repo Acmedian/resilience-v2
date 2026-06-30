@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Search, Bell, Settings, ChevronDown } from 'lucide-react'
 
-const NAV_ITEMS = ['Overview', 'Analytics', 'Surveys', 'Questions', 'Users', 'Medical Scribe']
+const NAV_ITEMS = ['Overview', 'Cohorts', 'Screenings', 'Patients', 'Reports']
 
 function BrainIcon() {
   return (
@@ -29,11 +29,11 @@ export default function Topbar({ activeNav, onNavChange }) {
       <div className="flex items-center gap-4 px-5 h-14">
         {/* Logo */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-ink flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#0F1715', border: '1px solid rgba(45,212,160,0.2)' }}>
             <BrainIcon />
           </div>
-          <span className="font-bold text-ink text-[15px] tracking-tight">Resilience</span>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-ink text-mint tracking-wide">
+          <span className="font-bold text-white text-[15px] tracking-tight">Resilience</span>
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md tracking-wide" style={{ background: 'rgba(45,212,160,0.12)', color: '#2DD4A0' }}>
             Admin
           </span>
         </div>
@@ -45,14 +45,14 @@ export default function Topbar({ activeNav, onNavChange }) {
               key={item}
               onClick={() => onNavChange(item)}
               className="relative px-3 py-1.5 text-[13px] font-medium rounded-full transition-colors duration-150 whitespace-nowrap"
-              style={{ color: activeNav === item ? '#fff' : '#64748B' }}
+              style={{ color: activeNav === item ? '#fff' : 'rgba(255,255,255,0.4)' }}
             >
               {activeNav === item && (
                 <motion.div
                   layoutId="nav-pill"
-                  className="absolute inset-0 rounded-full bg-ink"
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: 'rgba(45,212,160,0.15)', border: '1px solid rgba(45,212,160,0.25)', zIndex: -1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  style={{ zIndex: -1 }}
                 />
               )}
               <span className="relative z-10">{item}</span>
@@ -62,30 +62,49 @@ export default function Topbar({ activeNav, onNavChange }) {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-transparent focus-within:border-mint/30 transition-colors duration-150">
-            <Search size={13} className="text-slate-400 shrink-0" />
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors duration-150"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <Search size={13} style={{ color: 'rgba(255,255,255,0.3)' }} className="shrink-0" />
             <input
               type="text"
               placeholder="Search..."
-              className="bg-transparent outline-none text-ink placeholder:text-slate-400 w-24 text-[13px]"
+              className="bg-transparent outline-none w-24 text-[13px]"
+              style={{ color: '#fff' }}
             />
           </div>
 
-          <button className="relative p-2 rounded-lg hover:bg-slate-100 transition-colors duration-150">
-            <Bell size={15} className="text-slate-500" />
+          <button
+            className="relative p-2 rounded-lg transition-colors duration-150"
+            style={{ background: 'rgba(255,255,255,0.04)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+          >
+            <Bell size={15} style={{ color: 'rgba(255,255,255,0.4)' }} />
             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-mint" />
           </button>
 
-          <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors duration-150">
-            <Settings size={15} className="text-slate-500" />
+          <button
+            className="p-2 rounded-lg transition-colors duration-150"
+            style={{ background: 'rgba(255,255,255,0.04)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+          >
+            <Settings size={15} style={{ color: 'rgba(255,255,255,0.4)' }} />
           </button>
 
-          <button className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl hover:bg-slate-100 transition-colors duration-150 border border-transparent hover:border-border">
-            <div className="w-6 h-6 rounded-full bg-ink flex items-center justify-center text-[10px] font-bold text-mint">
+          <button
+            className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl transition-colors duration-150"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+          >
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'rgba(45,212,160,0.15)', color: '#2DD4A0' }}>
               A
             </div>
-            <span className="text-[13px] font-medium text-ink">Admin</span>
-            <ChevronDown size={12} className="text-slate-400" />
+            <span className="text-[13px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>Admin</span>
+            <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
           </button>
         </div>
       </div>

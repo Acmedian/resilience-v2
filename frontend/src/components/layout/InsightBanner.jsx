@@ -15,17 +15,25 @@ export default function InsightBanner({ children }) {
           transition={{ duration: 0.2 }}
           className="insight-glow flex items-center gap-3"
         >
-          <div className="w-8 h-8 rounded-full bg-mint-light flex items-center justify-center flex-shrink-0">
-            <Zap size={14} className="text-mint-dark" fill="#0D9488" />
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(45,212,160,0.12)' }}
+          >
+            <Zap size={14} style={{ color: '#2DD4A0' }} fill="#2DD4A0" strokeWidth={0} />
           </div>
 
-          <p className="text-sm leading-relaxed text-text-secondary flex-1 [&_strong]:text-ink [&_strong]:font-black">{children}</p>
+          <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(255,255,255,0.75)' }}>
+            {children}
+          </p>
 
           <button
             onClick={() => setDismissed(true)}
-            className="p-1 rounded-md hover:bg-mint/20 transition-colors duration-150 shrink-0"
+            className="p-1 rounded-md transition-colors duration-150 shrink-0"
+            style={{ color: 'rgba(255,255,255,0.3)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
-            <X size={13} className="text-slate-400" />
+            <X size={13} />
           </button>
         </motion.div>
       )}

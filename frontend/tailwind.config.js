@@ -4,11 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: '#0A1628',
+        ink: '#0B0F0E',
+        panel: '#0F1715',
         mint: '#2DD4A0',
+        'mint-dim': 'rgba(45,212,160,0.12)',
+        'mint-glow': 'rgba(45,212,160,0.16)',
         'mint-light': '#E6F9F4',
         'mint-dark': '#0D9488',
         'mint-mid': '#1BB88A',
+        'text-white': '#FFFFFF',
+        'text-dim': 'rgba(255,255,255,0.4)',
+        'text-faint': 'rgba(255,255,255,0.25)',
+        amber: '#F0B429',
+        danger: '#E5534B',
         surface: '#F8FAFC',
         'surface-soft': '#F1F5F9',
         border: '#E2E8F0',

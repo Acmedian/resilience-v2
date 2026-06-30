@@ -1,21 +1,31 @@
 export const MOCK_STATS = {
-  participants: 284,
-  completion: 71.74,
-  pending: 10.12,
-  voiceSessions: 56.1,
+  avgResilienceScore: 73.4,
+  activePatients: 248,
+  screeningsCompleted: 1847,
+  highRiskFlags: 14,
+  screeningParticipation: 91.2,
 };
 
-export const MOCK_PARTICIPANTS = [
-  { id: 1, name: 'Sgt. Arjun Mehta', unit: '3rd Infantry', score: 82, survey: 'PHQ-9', date: '2026-06-20', status: 'completed' },
-  { id: 2, name: 'Cpl. Priya Sharma', unit: '7th Signal', score: 61, survey: 'GAD-7', date: '2026-06-21', status: 'pending' },
-  { id: 3, name: 'Lt. Vikram Nair', unit: '5th Armoured', score: 74, survey: 'PCL-5', date: '2026-06-19', status: 'completed' },
-  { id: 4, name: 'Pvt. Anita Singh', unit: '2nd Logistics', score: 55, survey: 'PHQ-9', date: '2026-06-22', status: 'at-risk' },
-  { id: 5, name: 'Maj. Ravi Tiwari', unit: '1st Medical', score: 91, survey: 'GAD-7', date: '2026-06-18', status: 'completed' },
-  { id: 6, name: 'Cpt. Deepa Pillai', unit: '4th Engineers', score: 68, survey: 'PCL-5', date: '2026-06-23', status: 'completed' },
-  { id: 7, name: 'Sgt. Arun Kumar', unit: '6th Artillery', score: 43, survey: 'PHQ-9', date: '2026-06-24', status: 'at-risk' },
-  { id: 8, name: 'Pvt. Meena Rao', unit: '3rd Infantry', score: 77, survey: 'GAD-7', date: '2026-06-21', status: 'completed' },
-  { id: 9, name: 'Lt. Suresh Iyer', unit: '7th Signal', score: 59, survey: 'PCL-5', date: '2026-06-22', status: 'pending' },
-  { id: 10, name: 'Cpl. Kavya Bhat', unit: '5th Armoured', score: 85, survey: 'PHQ-9', date: '2026-06-20', status: 'completed' },
+export const MOCK_PATIENTS = [
+  { id: 1, name: 'Priya Sharma', cohort: 'CBT Program', score: 82, screening: 'PHQ-9', date: '2026-06-20', status: 'completed' },
+  { id: 2, name: 'James Roberts', cohort: 'Mindfulness Group', score: 61, screening: 'GAD-7', date: '2026-06-21', status: 'pending' },
+  { id: 3, name: 'Sarah Anderson', cohort: 'Self-Guided', score: 74, screening: 'Resilience & Coping Skills', date: '2026-06-19', status: 'completed' },
+  { id: 4, name: 'Mike Chen', cohort: 'CBT Program', score: 55, screening: 'PHQ-9', date: '2026-06-22', status: 'at-risk' },
+  { id: 5, name: 'Elena Martinez', cohort: 'Mindfulness Group', score: 91, screening: 'GAD-7', date: '2026-06-18', status: 'completed' },
+  { id: 6, name: 'David Park', cohort: 'Trauma Recovery Cohort', score: 68, screening: 'Emotional Wellbeing Index', date: '2026-06-23', status: 'completed' },
+  { id: 7, name: 'Aisha Johnson', cohort: 'CBT Program', score: 43, screening: 'PHQ-9', date: '2026-06-24', status: 'at-risk' },
+  { id: 8, name: 'Liam O\'Brien', cohort: 'Self-Guided', score: 77, screening: 'GAD-7', date: '2026-06-21', status: 'completed' },
+  { id: 9, name: 'Nadia Patel', cohort: 'Mindfulness Group', score: 59, screening: 'Emotional Wellbeing Index', date: '2026-06-22', status: 'pending' },
+  { id: 10, name: 'Tom Nguyen', cohort: 'Trauma Recovery Cohort', score: 85, screening: 'PHQ-9', date: '2026-06-20', status: 'completed' },
+];
+
+export const MOCK_SCREENINGS = [
+  { id: 1, name: 'Resilience & Coping Skills', frequency: 'weekly', cohort: 'All Cohorts', status: 'active' },
+  { id: 2, name: 'Emotional Wellbeing Index', frequency: 'monthly', cohort: 'All Cohorts', status: 'active' },
+  { id: 3, name: 'PHQ-9 Depression Screen', frequency: 'baseline', cohort: 'CBT Program', status: 'active' },
+  { id: 4, name: 'GAD-7 Anxiety Assessment', frequency: 'monthly', cohort: 'All Cohorts', status: 'active' },
+  { id: 5, name: 'Trauma Impact Screen', frequency: 'baseline', cohort: 'Trauma Recovery Cohort', status: 'active' },
+  { id: 6, name: 'Mindfulness Progress Check', frequency: 'weekly', cohort: 'Mindfulness Group', status: 'upcoming' },
 ];
 
 export const MOCK_QUESTIONS = [
@@ -27,53 +37,44 @@ export const MOCK_QUESTIONS = [
   { id: 6, text: 'Have you felt detached or estranged from other people?', type: 'scale', category: 'PTSD' },
   { id: 7, text: 'How often have you felt hopeless about the future?', type: 'scale', category: 'Depression' },
   { id: 8, text: 'Have you experienced any panic attacks recently?', type: 'boolean', category: 'Anxiety' },
-  { id: 9, text: 'How well have you been able to manage stress at work?', type: 'scale', category: 'Resilience' },
-  { id: 10, text: 'Do you feel supported by your unit and commanding officers?', type: 'scale', category: 'Social Support' },
-];
-
-export const MOCK_SURVEYS = [
-  { id: 1, name: 'PHQ-9 Depression Screener', validFrom: '2026-01-01', validTo: '2026-12-31', unit: 'All Units', status: 'active' },
-  { id: 2, name: 'GAD-7 Anxiety Assessment', validFrom: '2026-01-01', validTo: '2026-12-31', unit: 'All Units', status: 'active' },
-  { id: 3, name: 'PCL-5 PTSD Checklist', validFrom: '2026-03-01', validTo: '2026-09-30', unit: '3rd Infantry', status: 'active' },
-  { id: 4, name: 'Combat Stress Q1 2026', validFrom: '2026-01-01', validTo: '2026-03-31', unit: '5th Armoured', status: 'expired' },
-  { id: 5, name: 'Resilience Baseline Survey', validFrom: '2026-06-01', validTo: '2026-08-31', unit: 'All Units', status: 'active' },
-  { id: 6, name: 'Post-Deployment Wellbeing', validFrom: '2026-07-01', validTo: '2026-10-31', unit: '7th Signal', status: 'upcoming' },
+  { id: 9, text: 'How well have you been able to manage stress this week?', type: 'scale', category: 'Resilience' },
+  { id: 10, text: 'Do you feel supported by your care team and cohort?', type: 'scale', category: 'Social Support' },
 ];
 
 export const MOCK_SCRIBE_SESSIONS = [
   {
     id: 1,
-    patient: 'Sgt. Arjun Mehta',
-    doctor: 'Dr. Priya Menon',
+    patient: 'Priya Sharma',
+    clinician: 'Dr. Priya Menon',
     date: '2026-06-20T10:30:00',
     summary: 'Patient reports mild depressive symptoms over the past 2 weeks. Sleep disruption noted. Recommended CBT referral and follow-up in 4 weeks.',
   },
   {
     id: 2,
-    patient: 'Pvt. Anita Singh',
-    doctor: 'Dr. Rajan Kapoor',
+    patient: 'Mike Chen',
+    clinician: 'Dr. Rajan Kapoor',
     date: '2026-06-22T14:00:00',
-    summary: 'Elevated anxiety scores on GAD-7 (14/21). Patient discloses increased workload stress. Breathing exercises prescribed. Medication review scheduled.',
+    summary: 'Elevated anxiety scores on GAD-7 (14/21). Patient discloses increased work-related stress. Breathing exercises prescribed. Medication review scheduled.',
   },
   {
     id: 3,
-    patient: 'Sgt. Arun Kumar',
-    doctor: 'Dr. Priya Menon',
+    patient: 'Aisha Johnson',
+    clinician: 'Dr. Priya Menon',
     date: '2026-06-24T09:00:00',
-    summary: 'PHQ-9 score of 17 (moderate-severe). Patient reports persistent low mood and social withdrawal since return from deployment. Psychiatric referral initiated.',
+    summary: 'PHQ-9 score of 17 (moderate-severe). Patient reports persistent low mood and social withdrawal. Psychiatric referral initiated.',
   },
   {
     id: 4,
-    patient: 'Cpl. Priya Sharma',
-    doctor: 'Dr. Sunita Verma',
+    patient: 'James Roberts',
+    clinician: 'Dr. Sunita Verma',
     date: '2026-06-21T11:15:00',
-    summary: 'Routine check-in. Patient reports feeling better with peer support group. GAD-7 improved from 12 to 8. Continue current management plan.',
+    summary: 'Routine check-in. Patient reports improvement with peer support group. GAD-7 improved from 12 to 8. Continue current management plan.',
   },
   {
     id: 5,
-    patient: 'Lt. Suresh Iyer',
-    doctor: 'Dr. Rajan Kapoor',
+    patient: 'Nadia Patel',
+    clinician: 'Dr. Rajan Kapoor',
     date: '2026-06-22T16:00:00',
-    summary: 'PCL-5 assessment completed. Score of 38 indicates probable PTSD. Patient reports hypervigilance and avoidance behaviours. EMDR therapy discussed.',
+    summary: 'Trauma Impact Screen completed. Score indicates moderate symptoms. Patient reports hypervigilance and avoidance behaviours. EMDR therapy discussed.',
   },
 ];

@@ -21,46 +21,44 @@ export default function StatCard({
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.15 }}
-      className="card p-5 flex flex-col gap-3 cursor-default"
+      className="glass-card p-5 flex flex-col gap-3 cursor-default"
       style={{ borderLeft: `3px solid ${progressColor}` }}
     >
-      {/* Header row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           {IconComponent && (
-            <IconComponent size={14} className="text-slate-400 shrink-0" />
+            <IconComponent size={14} style={{ color: 'rgba(255,255,255,0.3)' }} className="shrink-0" />
           )}
-          <span className="text-xs font-medium text-slate-500">{label}</span>
+          <span className="label-eyebrow">{label}</span>
         </div>
-        <button className="p-0.5 rounded hover:bg-slate-100 transition-colors duration-150">
-          <ChevronRight size={13} className="text-slate-300" />
+        <button
+          className="p-0.5 rounded transition-colors duration-150"
+          style={{ color: 'rgba(255,255,255,0.2)' }}
+        >
+          <ChevronRight size={13} />
         </button>
       </div>
 
-      {/* Main number */}
       <div className="stat-number">
         <AnimatedNumber value={parseFloat(value) || 0} decimals={decimals} suffix={suffix} />
       </div>
 
-      {/* Sub-stats */}
       {subStats.length > 0 && (
         <div className="flex items-center gap-5">
           {subStats.map((s) => (
             <div key={s.label} className="flex items-baseline gap-1">
-              <span className="text-sm font-bold text-ink">{s.value}</span>
-              <span className="text-xs text-slate-400">{s.label}</span>
+              <span className="text-sm font-bold text-white">{s.value}</span>
+              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Spark bars */}
       {sparkData.length > 0 && <SparkBar data={sparkData} height={40} />}
 
-      {/* Progress bar */}
       <div
-        className="w-full bg-slate-100 rounded-full overflow-hidden"
-        style={{ height: 3 }}
+        className="w-full rounded-full overflow-hidden"
+        style={{ height: 3, background: 'rgba(255,255,255,0.06)' }}
       >
         <div
           className="h-full rounded-full transition-all duration-700"

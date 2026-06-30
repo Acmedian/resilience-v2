@@ -11,7 +11,7 @@ export default function SparkBar({ data = [], height = 32, highThreshold = 70 })
             className="sparkbar-item"
             style={{
               height: `${pct}%`,
-              background: isHigh ? '#2DD4A0' : '#E4E7EC',
+              background: isHigh ? '#2DD4A0' : 'rgba(255,255,255,0.08)',
             }}
             title={String(val)}
           />

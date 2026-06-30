@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, Circle, CheckCircle, Edit3, Mic, MicOff } from 'lucide-react'
+import { Zap, CheckCircle, Edit3, Mic, MicOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const TRANSCRIPT = [
-  { role: 'doctor', text: 'Good morning. How have you been feeling since our last session?' },
+  { role: 'clinician', text: 'Good morning. How have you been feeling since our last session?' },
   { role: 'patient', text: 'A bit better, but the sleep issues are still there. Some nights I just can\'t switch off.' },
-  { role: 'doctor', text: 'I see. Are you still taking the melatonin we discussed?' },
+  { role: 'clinician', text: 'I see. Are you still taking the melatonin we discussed?' },
   { role: 'patient', text: 'Yes, 3mg before bed. It helps a little but not consistently.' },
-  { role: 'doctor', text: 'Okay. Let\'s consider adjusting the dose. I also want to review your mood logs this week.' },
+  { role: 'clinician', text: 'Okay. Let\'s consider adjusting the dose. I also want to review your mood logs this week.' },
   { role: 'patient', text: 'Sure, I\'ve been tracking on the app. There were a couple of low days mid-week.' },
 ]
 
 const SESSION_INFO = [
-  { label: 'Doctor', value: 'Dr. Aryan Shah' },
-  { label: 'Patient', value: 'Priya Singh (32F)' },
+  { label: 'Clinician', value: 'Dr. Aryan Shah' },
+  { label: 'Patient', value: 'Priya Sharma (32F)' },
   { label: 'Session type', value: 'Follow-up' },
   { label: 'History', value: 'Depression, Insomnia' },
 ]
@@ -34,7 +34,7 @@ function Timer() {
   }, [])
   const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
   const ss = String(seconds % 60).padStart(2, '0')
-  return <span className="font-mono text-sm font-semibold text-ink">{mm}:{ss}</span>
+  return <span className="font-mono text-sm font-semibold text-white">{mm}:{ss}</span>
 }
 
 export default function MedicalScribe() {
@@ -44,32 +44,35 @@ export default function MedicalScribe() {
   const [editing, setEditing] = useState(false)
 
   return (
-    <div className="min-h-screen bg-surface-soft flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: '#0B0F0E' }}>
       {/* Topbar */}
       <header className="topbar-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-ink flex items-center justify-center">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: '#0F1715', border: '1px solid rgba(45,212,160,0.2)' }}
+              >
                 <Zap className="w-4 h-4 text-mint" fill="#2DD4A0" strokeWidth={0} />
               </div>
-              <span className="font-bold text-ink text-sm">Resilience</span>
+              <span className="font-bold text-white text-sm">Resilience</span>
             </div>
-            <span className="text-slate-muted text-sm font-medium">Medical Scribe</span>
+            <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>Medical Scribe</span>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setRecording(r => !r)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                recording
-                  ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                  : 'bg-mint-light text-mint-dark border border-mint/30 hover:bg-mint/20'
-              }`}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+              style={recording
+                ? { background: 'rgba(229,83,75,0.12)', color: '#E5534B', border: '1px solid rgba(229,83,75,0.25)' }
+                : { background: 'rgba(45,212,160,0.10)', color: '#2DD4A0', border: '1px solid rgba(45,212,160,0.2)' }
+              }
             >
               {recording ? (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-blink" />
+                  <span className="w-2 h-2 rounded-full bg-danger animate-blink" />
                   <Timer />
                   <span>Recording</span>
                   <MicOff className="w-3.5 h-3.5" />
@@ -92,12 +95,12 @@ export default function MedicalScribe() {
       </header>
 
       {/* Info Bar */}
-      <div className="bg-white border-b border-border">
+      <div style={{ background: '#0A0E0D', borderBottom: '1px solid rgba(45,212,160,0.08)' }}>
         <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap gap-x-8 gap-y-1">
           {SESSION_INFO.map(({ label, value }) => (
             <div key={label} className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-muted">{label}:</span>
-              <span className="text-xs font-medium text-ink">{value}</span>
+              <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.25)' }}>{label}:</span>
+              <span className="text-xs font-medium text-white">{value}</span>
             </div>
           ))}
         </div>
@@ -106,11 +109,17 @@ export default function MedicalScribe() {
       {/* Two Column */}
       <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Transcript Panel */}
-        <div className="card flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <h2 className="text-sm font-bold text-ink">Live transcript</h2>
-            <div className="flex items-center gap-1.5 bg-red-50 text-red-500 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-blink" />
+        <div className="glass-card flex flex-col overflow-hidden">
+          <div
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: '1px solid rgba(45,212,160,0.08)' }}
+          >
+            <h2 className="text-sm font-bold text-white">Live transcript</h2>
+            <div
+              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
+              style={{ background: 'rgba(229,83,75,0.12)', color: '#E5534B', border: '1px solid rgba(229,83,75,0.2)' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-danger animate-blink" />
               LIVE
             </div>
           </div>
@@ -118,20 +127,20 @@ export default function MedicalScribe() {
             {TRANSCRIPT.map((line, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: line.role === 'doctor' ? -8 : 8 }}
+                initial={{ opacity: 0, x: line.role === 'clinician' ? -8 : 8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.12, duration: 0.3 }}
                 className="flex flex-col gap-1"
               >
                 <span
                   className="text-[11px] font-bold uppercase tracking-wider"
-                  style={{ color: line.role === 'doctor' ? '#0D9488' : '#6B7280' }}
+                  style={{ color: line.role === 'clinician' ? '#2DD4A0' : 'rgba(255,255,255,0.35)' }}
                 >
-                  {line.role === 'doctor' ? 'Dr. Shah' : 'Priya'}
+                  {line.role === 'clinician' ? 'Dr. Shah' : 'Priya'}
                 </span>
                 <p
                   className="text-sm leading-relaxed"
-                  style={{ color: line.role === 'doctor' ? '#1BB88A' : '#374151' }}
+                  style={{ color: line.role === 'clinician' ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.55)' }}
                 >
                   {line.text}
                 </p>
@@ -141,10 +150,16 @@ export default function MedicalScribe() {
         </div>
 
         {/* AI Summary Panel */}
-        <div className="card flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <h2 className="text-sm font-bold text-ink">AI Summary</h2>
-            <span className="bg-ink text-mint text-[11px] font-bold px-2.5 py-1 rounded-full tracking-wider">
+        <div className="glass-card flex flex-col overflow-hidden">
+          <div
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: '1px solid rgba(45,212,160,0.08)' }}
+          >
+            <h2 className="text-sm font-bold text-white">AI Summary</h2>
+            <span
+              className="text-[11px] font-bold px-2.5 py-1 rounded-full tracking-wider"
+              style={{ background: 'rgba(45,212,160,0.12)', color: '#2DD4A0' }}
+            >
               AI · Draft
             </span>
           </div>
@@ -164,22 +179,25 @@ export default function MedicalScribe() {
                     className="input resize-none text-xs"
                   />
                 ) : (
-                  <p className="text-sm text-ink leading-relaxed">{value}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>{value}</p>
                 )}
               </motion.div>
             ))}
           </div>
 
-          <div className="px-5 py-4 border-t border-border flex gap-2">
+          <div
+            className="px-5 py-4 flex gap-2"
+            style={{ borderTop: '1px solid rgba(45,212,160,0.08)' }}
+          >
             {approved ? (
-              <div className="flex items-center gap-2 text-mint-mid text-sm font-semibold">
+              <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#2DD4A0' }}>
                 <CheckCircle className="w-4 h-4" />
                 Approved
               </div>
             ) : (
               <button
                 onClick={() => setApproved(true)}
-                className="btn-primary flex-1"
+                className="btn-mint flex-1"
               >
                 <CheckCircle className="w-4 h-4" />
                 Approve

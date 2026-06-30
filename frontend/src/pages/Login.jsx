@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, Mail, Lock, ArrowRight, Info } from 'lucide-react'
+import { Zap, Mail, Lock, ArrowRight, Shield } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const ROLES = [
-  { id: 'participant', label: 'Participant' },
-  { id: 'doctor', label: 'Doctor' },
+  { id: 'patient', label: 'Patient' },
+  { id: 'clinician', label: 'Clinician' },
   { id: 'admin', label: 'Admin' },
 ]
 
@@ -21,7 +21,7 @@ function GoogleIcon() {
 }
 
 export default function Login() {
-  const [role, setRole] = useState('participant')
+  const [role, setRole] = useState('patient')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
@@ -30,7 +30,7 @@ export default function Login() {
     e.preventDefault()
     if (role === 'admin') {
       navigate('/admin/questions')
-    } else if (role === 'doctor') {
+    } else if (role === 'clinician') {
       navigate('/scribe')
     } else {
       navigate('/home')
@@ -42,37 +42,60 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-soft flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: '#0B0F0E' }}
+    >
+      {/* Background glow */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(45,212,160,0.08) 0%, transparent 70%)',
+        }}
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full max-w-[400px]"
+        className="w-full max-w-[400px] relative"
       >
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-ink mb-4 shadow-float">
+          <div
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
+            style={{ background: '#0F1715', border: '1px solid rgba(45,212,160,0.2)' }}
+          >
             <Zap className="w-7 h-7 text-mint" fill="#2DD4A0" strokeWidth={0} />
           </div>
-          <h1 className="text-2xl font-bold text-ink tracking-tight">Resilience</h1>
-          <p className="text-sm text-slate-muted mt-1">Your mental health companion</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Resilience</h1>
+          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            Mental health screening and care platform
+          </p>
         </div>
 
         {/* Card */}
-        <div className="card p-6 shadow-float">
+        <div
+          className="p-6 rounded-2xl"
+          style={{ background: '#0F1715', border: '1px solid rgba(45,212,160,0.12)' }}
+        >
           {/* Role Switcher */}
-          <div className="relative flex bg-border rounded-xl p-1 mb-6">
+          <div
+            className="relative flex rounded-xl p-1 mb-6"
+            style={{ background: 'rgba(255,255,255,0.04)' }}
+          >
             {ROLES.map(({ id, label }) => (
               <button
                 key={id}
                 onClick={() => setRole(id)}
                 className="relative flex-1 py-1.5 text-sm font-medium rounded-lg z-10 transition-colors"
-                style={{ color: role === id ? '#0A1628' : '#9CA3AF' }}
+                style={{ color: role === id ? '#fff' : 'rgba(255,255,255,0.35)' }}
               >
                 {role === id && (
                   <motion.div
                     layoutId="role-pill"
-                    className="absolute inset-0 bg-white rounded-lg shadow-card"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ background: 'rgba(45,212,160,0.15)', border: '1px solid rgba(45,212,160,0.25)' }}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -83,20 +106,34 @@ export default function Login() {
 
           {/* Auth Area */}
           <AnimatePresence mode="wait">
-            {role === 'participant' ? (
+            {role === 'patient' ? (
               <motion.div
-                key="participant"
+                key="patient"
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 12 }}
                 transition={{ duration: 0.22 }}
+                className="space-y-3"
               >
+                {/* Google SSO — kept white/light for brand recognition contrast */}
                 <button
                   onClick={handleGoogle}
-                  className="w-full flex items-center justify-center gap-3 bg-white border border-border-strong rounded-xl py-3 px-4 text-sm font-medium text-ink hover:border-mint transition-colors shadow-card hover:shadow-lift"
+                  className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-xl py-3 px-4 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors shadow-sm"
                 >
                   <GoogleIcon />
                   Continue with Google
+                </button>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                  <span className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.2)' }}>or</span>
+                  <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                </div>
+                <button
+                  onClick={handleGoogle}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  Sign in with email link
                 </button>
               </motion.div>
             ) : (
@@ -110,7 +147,7 @@ export default function Login() {
                 className="space-y-3"
               >
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-muted pointer-events-none" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'rgba(255,255,255,0.25)' }} />
                   <input
                     type="email"
                     placeholder="Email address"
@@ -121,7 +158,7 @@ export default function Login() {
                   />
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-muted pointer-events-none" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'rgba(255,255,255,0.25)' }} />
                   <input
                     type="password"
                     placeholder="Password"
@@ -131,41 +168,21 @@ export default function Login() {
                     required
                   />
                 </div>
-                <button
-                  type="submit"
-                  className="btn-primary w-full mt-1"
-                >
+                <button type="submit" className="btn-mint w-full mt-1">
                   Sign in
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </motion.form>
             )}
           </AnimatePresence>
-
-          {/* OTP Note - only for participants */}
-          <AnimatePresence>
-            {role === 'participant' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="mt-4 flex items-start gap-2 bg-mint-light rounded-xl p-3">
-                  <Info className="w-3.5 h-3.5 text-mint-mid mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-mint-dark leading-relaxed">
-                    You'll receive a one-time code via SMS after Google sign-in for extra security.
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
-        <p className="text-center text-xs text-slate-muted mt-6">
-          Protected by end-to-end encryption
-        </p>
+        <div className="flex items-center justify-center gap-1.5 mt-6">
+          <Shield size={11} style={{ color: 'rgba(255,255,255,0.2)' }} />
+          <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            Protected by end-to-end encryption
+          </p>
+        </div>
       </motion.div>
     </div>
   )
