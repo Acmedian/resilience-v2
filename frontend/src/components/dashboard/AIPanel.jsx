@@ -1,20 +1,5 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, ChevronLeft, ChevronRight } from 'lucide-react'
-
-function DiamondIcon({ size = 14 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 14 14" fill="none">
-      <path d="M7 1L13 7L7 13L1 7L7 1Z" fill="#2DD4A0" stroke="#2DD4A0" strokeWidth="0.5" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-const COHORT_BARS = [
-  { label: 'CBT Program', value: '+8.2', progress: 82, color: '#2DD4A0' },
-  { label: 'Mindfulness Group', value: '+3.1', progress: 55, color: '#0D9488' },
-  { label: 'Self-Guided', value: '+1.8', progress: 32, color: '#94A3B8' },
-]
 
 export default function AIPanel({ collapsed, onToggle }) {
   const [input, setInput] = useState('')
@@ -24,215 +9,151 @@ export default function AIPanel({ collapsed, onToggle }) {
     setInput('')
   }
 
+  /* ── Collapsed rail — dark, 56px wide ── */
+  if (collapsed) {
+    return (
+      <motion.div
+        key="collapsed"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, width: 56 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+        onClick={onToggle}
+        title="Expand AI assistant"
+        style={{ width: 56, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '18px 0', borderRadius: 22, color: '#fff', cursor: 'pointer', background: 'radial-gradient(120% 60% at 50% 0%,rgba(45,212,160,0.22),transparent 55%),#0A1628', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 1px 2px rgba(10,22,40,0.18),0 16px 32px -8px rgba(10,22,40,0.42)', transition: 'transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s cubic-bezier(.4,0,.2,1)' }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(10,22,40,0.22),0 26px 48px -12px rgba(10,22,40,0.55)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 1px 2px rgba(10,22,40,0.18),0 16px 32px -8px rgba(10,22,40,0.42)' }}
+      >
+        {/* chevron button at top */}
+        <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .2s ease' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.16)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2"><path d="M15 6l-6 6 6 6"/></svg>
+        </div>
+
+        {/* diamond icon */}
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 18, boxShadow: '0 4px 10px -2px rgba(10,22,40,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ width: 11, height: 11, background: '#2DD4A0', transform: 'rotate(45deg)', borderRadius: 2 }} />
+        </div>
+
+        {/* vertical label */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '18px 0' }}>
+          <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: 11.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Resilience AI</span>
+        </div>
+
+        {/* online dot */}
+        <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#2DD4A0', animation: 'onlinepulse 2.4s infinite' }} />
+      </motion.div>
+    )
+  }
+
+  /* ── Expanded panel — white, 362px wide ── */
   return (
     <motion.div
-      animate={{ width: collapsed ? 48 : 320 }}
-      transition={{ duration: 0.3, ease: [0.2, 0.8, 0.2, 1] }}
-      className="relative flex-shrink-0 flex flex-col overflow-hidden"
-      style={{
-        background: '#0A0E0D',
-        borderLeft: '1px solid rgba(45,212,160,0.10)',
-        height: 'calc(100vh - 56px)',
-      }}
+      key="expanded"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, width: 362 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      style={{ width: 362, flexShrink: 0, display: 'flex', flexDirection: 'column', borderRadius: 22, overflow: 'hidden', background: '#fff', border: '1px solid rgba(16,24,40,0.05)', boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 16px 32px -6px rgba(16,24,40,0.12)' }}
     >
-      <AnimatePresence mode="wait">
-        {collapsed ? (
-          /* ── Collapsed strip ── */
-          <motion.div
-            key="collapsed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col items-center py-3 gap-3 h-full"
-            style={{ cursor: 'default' }}
-          >
-            {/* ChevronLeft toggle at very top */}
-            <button
-              onClick={onToggle}
-              className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0"
-              style={{ background: 'rgba(255,255,255,0.04)' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-            >
-              <ChevronLeft size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
-            </button>
-            <div
-              className="w-8 h-8 flex items-center justify-center cursor-pointer"
-              onClick={onToggle}
-            >
-              <DiamondIcon size={16} />
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid rgba(16,24,40,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px -2px rgba(10,22,40,0.4)' }}>
+            <div style={{ width: 11, height: 11, background: '#2DD4A0', transform: 'rotate(45deg)', borderRadius: 2 }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, letterSpacing: '-0.01em', color: '#0A1628' }}>Resilience AI</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#667085', fontWeight: 600 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2DD4A0', animation: 'onlinepulse 2.4s infinite', flexShrink: 0 }}/>Online · analysing live data
             </div>
-            <div
-              onClick={onToggle}
-              style={{
-                writingMode: 'vertical-rl',
-                textOrientation: 'mixed',
-                transform: 'rotate(180deg)',
-                fontSize: 9,
-                fontWeight: 800,
-                letterSpacing: '0.15em',
-                color: 'rgba(255,255,255,0.3)',
-                userSelect: 'none',
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              RESILIENCE AI
-            </div>
-            <div className="w-2 h-2 rounded-full mb-2" style={{ background: '#2DD4A0', boxShadow: '0 0 6px #2DD4A0' }} />
-          </motion.div>
-        ) : (
-          /* ── Expanded panel ── */
-          <motion.div
-            key="expanded"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, delay: 0.1 }}
-            className="flex flex-col h-full w-[320px]"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 shrink-0"
-              style={{ background: '#0D1512' }}>
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(45,212,160,0.15)' }}>
-                  <DiamondIcon size={12} />
-                </div>
-                <div>
-                  <p className="text-white text-xs font-bold leading-tight">Resilience AI</p>
-                  <p className="text-[10px] leading-tight" style={{ color: '#2DD4A0' }}>Online · analysing live data</p>
-                </div>
-              </div>
-              <button
-                onClick={onToggle}
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                style={{ background: 'rgba(255,255,255,0.04)' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-              >
-                <ChevronRight size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
-              </button>
-            </div>
+          </div>
+        </div>
+        <button
+          onClick={onToggle}
+          title="Collapse"
+          style={{ width: 30, height: 30, flexShrink: 0, border: 'none', borderRadius: 9, background: 'rgba(16,24,40,0.05)', color: '#667085', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .2s ease' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,24,40,0.1)'; e.currentTarget.style.color = '#0A1628' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,24,40,0.05)'; e.currentTarget.style.color = '#667085' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
-              {/* Timestamp divider */}
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.08em' }}>
-                  TODAY · 09:14
-                </span>
-                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-              </div>
+      {/* Messages */}
+      <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', gap: 16, background: 'linear-gradient(180deg,rgba(16,24,40,0.015),transparent 120px)', overflow: 'hidden' }}>
+        <div style={{ textAlign: 'center', fontSize: 10.5, fontWeight: 600, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Today · 09:14</div>
 
-              {/* User message */}
-              <div className="flex justify-end">
-                <div
-                  className="max-w-[220px] rounded-2xl rounded-tr-sm px-3 py-2"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}
-                >
-                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                    Which cohort shows the highest resilience improvement?
-                  </p>
-                </div>
-              </div>
+        {/* user bubble */}
+        <div style={{ alignSelf: 'flex-end', maxWidth: '84%', background: '#0A1628', color: '#fff', padding: '12px 15px', borderRadius: '16px 16px 5px 16px', fontSize: 13, lineHeight: 1.5, fontWeight: 500, boxShadow: '0 6px 14px -4px rgba(10,22,40,0.35)' }}>
+          Which cohort shows the highest resilience improvement?
+        </div>
 
-              {/* AI response */}
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-4 rounded-md flex items-center justify-center" style={{ background: 'rgba(45,212,160,0.15)' }}>
-                    <DiamondIcon size={8} />
+        {/* AI response */}
+        <div style={{ alignSelf: 'flex-start', maxWidth: '90%', display: 'flex', gap: 9 }}>
+          <div style={{ width: 26, height: 26, borderRadius: 8, background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+            <div style={{ width: 8, height: 8, background: '#2DD4A0', transform: 'rotate(45deg)', borderRadius: 1 }}/>
+          </div>
+          <div style={{ background: 'rgba(16,24,40,0.045)', padding: '13px 15px', borderRadius: '16px 16px 16px 5px', fontSize: 13, lineHeight: 1.55, color: '#0A1628' }}>
+            <span style={{ fontWeight: 500 }}><b style={{ fontWeight: 800, color: '#0A8a63' }}>CBT Program</b> leads with the strongest gain this week. Here's the ranked breakdown:</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 13 }}>
+              {[
+                { label: 'CBT', pct: '100%', val: '+8.2' },
+                { label: 'Mindfulness', pct: '38%', val: '+3.1' },
+                { label: 'Self-guided', pct: '22%', val: '+1.8' },
+              ].map(row => (
+                <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 64, fontSize: 11.5, fontWeight: 700, flexShrink: 0, color: '#0A1628' }}>{row.label}</span>
+                  <div style={{ flex: 1, height: 7, borderRadius: 4, background: 'rgba(16,24,40,0.06)', overflow: 'hidden' }}>
+                    <div style={{ width: row.pct, height: '100%', borderRadius: 4, background: '#2DD4A0' }}/>
                   </div>
-                  <span className="text-[10px] font-bold" style={{ color: '#2DD4A0' }}>Resilience AI</span>
+                  <span style={{ width: 36, textAlign: 'right', fontSize: 12, fontWeight: 800, color: '#0A8a63', fontVariantNumeric: 'tabular-nums' }}>{row.val}</span>
                 </div>
-
-                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  CBT Program leads with the strongest gain this week. Here's the ranked breakdown:
-                </p>
-
-                <div
-                  className="rounded-xl p-3 space-y-2.5"
-                  style={{ background: 'rgba(45,212,160,0.05)', border: '1px solid rgba(45,212,160,0.10)' }}
-                >
-                  {COHORT_BARS.map(row => (
-                    <div key={row.label}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>{row.label}</span>
-                        <span className="text-[11px] font-bold" style={{ color: row.color }}>{row.value}</span>
-                      </div>
-                      <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${row.progress}%`, background: row.color, transition: 'width 0.6s ease' }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                  The CBT cohort's gain is driven mainly by improved sleep-quality and session-adherence scores following last week's protocol update.
-                </p>
-
-                {/* Suggestion chips */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {["Why is CBT improving?", "Show high-risk patients"].map(chip => (
-                    <button
-                      key={chip}
-                      className="text-[10px] font-semibold px-2.5 py-1.5 rounded-full transition-all"
-                      style={{
-                        background: 'rgba(255,255,255,0.05)',
-                        color: 'rgba(255,255,255,0.45)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = 'rgba(45,212,160,0.4)'
-                        e.currentTarget.style.color = '#2DD4A0'
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                        e.currentTarget.style.color = 'rgba(255,255,255,0.45)'
-                      }}
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
+            <span style={{ display: 'block', marginTop: 13, fontSize: 12, color: '#667085', fontWeight: 500, lineHeight: 1.5 }}>
+              The CBT cohort's gain is driven mainly by improved sleep-quality and session-adherence scores following last week's protocol update.
+            </span>
+          </div>
+        </div>
 
-            {/* Input */}
-            <div className="px-3 pb-3 pt-2 shrink-0 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-              <div
-                className="flex items-center gap-2 rounded-xl px-3 py-2"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(45,212,160,0.12)' }}
-              >
-                <input
-                  type="text"
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask about your data..."
-                  className="flex-1 text-xs bg-transparent outline-none border-0"
-                  style={{ color: 'rgba(255,255,255,0.7)' }}
-                />
-                <button
-                  onClick={handleSend}
-                  className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all"
-                  style={{ background: '#2DD4A0' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#5EEAC0'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#2DD4A0'}
-                >
-                  <Send size={10} style={{ color: '#06231B' }} />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* suggestion chips */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 2, paddingLeft: 35 }}>
+          {['Why is CBT improving?', 'Show high-risk patients'].map(chip => (
+            <span key={chip}
+              style={{ fontSize: 11.5, fontWeight: 600, color: '#475467', background: '#fff', border: '1px solid rgba(16,24,40,0.1)', padding: '6px 11px', borderRadius: 20, cursor: 'pointer', transition: 'border-color .15s,color .15s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#2DD4A0'; e.currentTarget.style.color = '#0A8a63' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(16,24,40,0.1)'; e.currentTarget.style.color = '#475467' }}
+            >{chip}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Input */}
+      <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(16,24,40,0.06)', background: 'rgba(250,251,252,0.6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid rgba(16,24,40,0.1)', borderRadius: 14, padding: '7px 7px 7px 15px', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
+          <input
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSend()}
+            placeholder="Ask about your data…"
+            style={{ flex: 1, fontSize: 13, color: input ? '#0A1628' : '#98A2B3', fontWeight: 500, background: 'transparent', border: 'none', outline: 'none', fontFamily: 'inherit' }}
+          />
+          <button
+            onClick={handleSend}
+            style={{ position: 'relative', width: 36, height: 36, flexShrink: 0, border: 'none', borderRadius: 10, background: '#0A1628', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow .25s ease', boxShadow: '0 4px 10px -3px rgba(10,22,40,0.4)' }}
+            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 16px -4px rgba(10,22,40,0.5)'}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 10px -3px rgba(10,22,40,0.4)'}
+          >
+            {/* pulsing ring */}
+            <span style={{ position: 'absolute', inset: 0, borderRadius: 10, border: '2px solid #2DD4A0', animation: 'pulsering 2.2s cubic-bezier(.4,0,.2,1) infinite', pointerEvents: 'none' }}/>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2DD4A0" strokeWidth="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
     </motion.div>
   )
 }

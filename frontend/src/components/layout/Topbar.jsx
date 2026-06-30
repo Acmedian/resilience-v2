@@ -1,124 +1,59 @@
-import { motion } from 'framer-motion'
-import { Search, Bell, Settings, ChevronDown } from 'lucide-react'
-
-const NAV_ITEMS = ['Overview', 'Cohorts', 'Screenings', 'Reports']
-
-function BrainIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M9 3C6.24 3 4 5.24 4 8v.17A3 3 0 0 0 2 11v2a3 3 0 0 0 3 3h1v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3h1a3 3 0 0 0 3-3v-2a3 3 0 0 0-2-2.83V8c0-2.76-2.24-5-5-5H9z"
-        stroke="#2DD4A0"
-        strokeWidth="1.5"
-        fill="none"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 8v8M9.5 10v4M14.5 10v4"
-        stroke="#2DD4A0"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
+const NAV_ITEMS = ['Overview', 'Cohorts', 'Surveys', 'Reports']
 
 export default function Topbar({ activeNav, onNavChange }) {
   return (
-    <header
-      className="sticky top-0 z-50"
-      style={{
-        background: '#FFFFFF',
-        borderBottom: '1px solid rgba(0,0,0,0.07)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-      }}
-    >
-      <div className="flex items-center gap-4 px-5 h-14">
+    <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 66, padding: '0 32px', background: 'rgba(250,251,252,0.72)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderBottom: '1px solid rgba(16,24,40,0.06)' }}>
+
+      {/* Left: logo + nav */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
         {/* Logo */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: '#0D1E1A' }}
-          >
-            <BrainIcon />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ width: 26, height: 26, borderRadius: 8, background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(16,24,40,0.18)' }}>
+            <div style={{ width: 9, height: 9, background: '#2DD4A0', transform: 'rotate(45deg)', borderRadius: 2 }}/>
           </div>
-          <span className="font-bold text-[15px] tracking-tight" style={{ color: '#0F172A' }}>
-            Resilience
-          </span>
+          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: '#0A1628' }}>Resilience</span>
         </div>
 
-        {/* Center nav */}
-        <nav className="flex items-center gap-0.5 flex-1 justify-center">
-          {NAV_ITEMS.map((item) => (
+        {/* Nav items */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {NAV_ITEMS.map(item => (
             <button
               key={item}
-              onClick={() => onNavChange(item)}
-              className="relative px-3 py-1.5 text-[13px] font-medium rounded-full transition-colors duration-150 whitespace-nowrap"
-              style={{ color: activeNav === item ? '#FFFFFF' : '#6B7280' }}
+              onClick={() => onNavChange?.(item)}
+              style={{
+                fontSize: 13.5,
+                fontWeight: activeNav === item ? 600 : 500,
+                color: activeNav === item ? '#0A1628' : '#667085',
+                padding: '7px 13px',
+                borderRadius: 9,
+                background: activeNav === item ? 'rgba(16,24,40,0.05)' : 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'background .15s,color .15s',
+              }}
+              onMouseEnter={e => { if (activeNav !== item) { e.currentTarget.style.background = 'rgba(16,24,40,0.04)'; e.currentTarget.style.color = '#0A1628' } }}
+              onMouseLeave={e => { if (activeNav !== item) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#667085' } }}
             >
-              {activeNav === item && (
-                <motion.div
-                  layoutId="nav-pill"
-                  className="absolute inset-0 rounded-full"
-                  style={{ background: '#0F172A', zIndex: -1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10">{item}</span>
+              {item}
             </button>
           ))}
-        </nav>
-
-        {/* Right actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-            style={{ background: '#F3F4F6' }}
-          >
-            <Search size={13} style={{ color: '#9CA3AF' }} className="shrink-0" />
-            <input
-              type="text"
-              placeholder="Search patients..."
-              className="bg-transparent outline-none w-28 text-[13px]"
-              style={{ color: '#374151' }}
-            />
-          </div>
-
-          <button
-            className="relative p-2 rounded-lg transition-colors duration-150"
-            style={{ background: '#F3F4F6' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
-          >
-            <Bell size={15} style={{ color: '#9CA3AF' }} />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-mint" />
-          </button>
-
-          <button
-            className="p-2 rounded-lg transition-colors duration-150"
-            style={{ background: '#F3F4F6' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
-          >
-            <Settings size={15} style={{ color: '#9CA3AF' }} />
-          </button>
-
-          <button
-            className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl transition-colors duration-150"
-            style={{ background: '#F3F4F6' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
-          >
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-              style={{ background: '#0F172A', color: '#FFFFFF' }}
-            >
-              MK
-            </div>
-            <ChevronDown size={12} style={{ color: '#9CA3AF' }} />
-          </button>
         </div>
       </div>
-    </header>
+
+      {/* Right: search + avatar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        {/* Search */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 13px', borderRadius: 10, background: 'rgba(16,24,40,0.04)', minWidth: 190 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <span style={{ fontSize: 13, color: '#98A2B3', fontWeight: 500 }}>Search patients…</span>
+        </div>
+
+        {/* Avatar */}
+        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#0A1628,#1d3a5f)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700, boxShadow: '0 2px 6px rgba(16,24,40,0.18)' }}>
+          MK
+        </div>
+      </div>
+    </nav>
   )
 }
