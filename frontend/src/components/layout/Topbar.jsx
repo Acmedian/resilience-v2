@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Search, Bell, Settings, ChevronDown } from 'lucide-react'
 
-const NAV_ITEMS = ['Overview', 'Cohorts', 'Screenings', 'Patients', 'Reports']
+const NAV_ITEMS = ['Overview', 'Cohorts', 'Screenings', 'Reports']
 
 function BrainIcon() {
   return (
@@ -25,16 +25,25 @@ function BrainIcon() {
 
 export default function Topbar({ activeNav, onNavChange }) {
   return (
-    <header className="sticky top-0 z-50 topbar-blur">
+    <header
+      className="sticky top-0 z-50"
+      style={{
+        background: '#FFFFFF',
+        borderBottom: '1px solid rgba(0,0,0,0.07)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      }}
+    >
       <div className="flex items-center gap-4 px-5 h-14">
         {/* Logo */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#0F1715', border: '1px solid rgba(45,212,160,0.2)' }}>
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: '#0D1E1A' }}
+          >
             <BrainIcon />
           </div>
-          <span className="font-bold text-white text-[15px] tracking-tight">Resilience</span>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md tracking-wide" style={{ background: 'rgba(45,212,160,0.12)', color: '#2DD4A0' }}>
-            Admin
+          <span className="font-bold text-[15px] tracking-tight" style={{ color: '#0F172A' }}>
+            Resilience
           </span>
         </div>
 
@@ -45,13 +54,13 @@ export default function Topbar({ activeNav, onNavChange }) {
               key={item}
               onClick={() => onNavChange(item)}
               className="relative px-3 py-1.5 text-[13px] font-medium rounded-full transition-colors duration-150 whitespace-nowrap"
-              style={{ color: activeNav === item ? '#fff' : 'rgba(255,255,255,0.4)' }}
+              style={{ color: activeNav === item ? '#FFFFFF' : '#6B7280' }}
             >
               {activeNav === item && (
                 <motion.div
                   layoutId="nav-pill"
                   className="absolute inset-0 rounded-full"
-                  style={{ background: 'rgba(45,212,160,0.15)', border: '1px solid rgba(45,212,160,0.25)', zIndex: -1 }}
+                  style={{ background: '#0F172A', zIndex: -1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
@@ -63,48 +72,50 @@ export default function Topbar({ activeNav, onNavChange }) {
         {/* Right actions */}
         <div className="flex items-center gap-2 shrink-0">
           <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors duration-150"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+            style={{ background: '#F3F4F6' }}
           >
-            <Search size={13} style={{ color: 'rgba(255,255,255,0.3)' }} className="shrink-0" />
+            <Search size={13} style={{ color: '#9CA3AF' }} className="shrink-0" />
             <input
               type="text"
-              placeholder="Search..."
-              className="bg-transparent outline-none w-24 text-[13px]"
-              style={{ color: '#fff' }}
+              placeholder="Search patients..."
+              className="bg-transparent outline-none w-28 text-[13px]"
+              style={{ color: '#374151' }}
             />
           </div>
 
           <button
             className="relative p-2 rounded-lg transition-colors duration-150"
-            style={{ background: 'rgba(255,255,255,0.04)' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+            style={{ background: '#F3F4F6' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
+            onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
           >
-            <Bell size={15} style={{ color: 'rgba(255,255,255,0.4)' }} />
+            <Bell size={15} style={{ color: '#9CA3AF' }} />
             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-mint" />
           </button>
 
           <button
             className="p-2 rounded-lg transition-colors duration-150"
-            style={{ background: 'rgba(255,255,255,0.04)' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+            style={{ background: '#F3F4F6' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
+            onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
           >
-            <Settings size={15} style={{ color: 'rgba(255,255,255,0.4)' }} />
+            <Settings size={15} style={{ color: '#9CA3AF' }} />
           </button>
 
           <button
             className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl transition-colors duration-150"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+            style={{ background: '#F3F4F6' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
+            onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
           >
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'rgba(45,212,160,0.15)', color: '#2DD4A0' }}>
-              A
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+              style={{ background: '#0F172A', color: '#FFFFFF' }}
+            >
+              MK
             </div>
-            <span className="text-[13px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>Admin</span>
-            <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
+            <ChevronDown size={12} style={{ color: '#9CA3AF' }} />
           </button>
         </div>
       </div>

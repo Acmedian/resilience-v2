@@ -44,13 +44,27 @@ export default function AIPanel({ collapsed, onToggle }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="flex flex-col items-center py-4 gap-4 cursor-pointer h-full"
-            onClick={onToggle}
+            className="flex flex-col items-center py-3 gap-3 h-full"
+            style={{ cursor: 'default' }}
           >
-            <div className="w-8 h-8 flex items-center justify-center">
+            {/* ChevronLeft toggle at very top */}
+            <button
+              onClick={onToggle}
+              className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0"
+              style={{ background: 'rgba(255,255,255,0.04)' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+            >
+              <ChevronLeft size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
+            </button>
+            <div
+              className="w-8 h-8 flex items-center justify-center cursor-pointer"
+              onClick={onToggle}
+            >
               <DiamondIcon size={16} />
             </div>
             <div
+              onClick={onToggle}
               style={{
                 writingMode: 'vertical-rl',
                 textOrientation: 'mixed',
@@ -63,11 +77,12 @@ export default function AIPanel({ collapsed, onToggle }) {
                 flex: 1,
                 display: 'flex',
                 alignItems: 'center',
+                cursor: 'pointer',
               }}
             >
               RESILIENCE AI
             </div>
-            <div className="w-2 h-2 rounded-full bg-[#2DD4A0] mb-2" style={{ boxShadow: '0 0 6px #2DD4A0' }} />
+            <div className="w-2 h-2 rounded-full mb-2" style={{ background: '#2DD4A0', boxShadow: '0 0 6px #2DD4A0' }} />
           </motion.div>
         ) : (
           /* ── Expanded panel ── */
