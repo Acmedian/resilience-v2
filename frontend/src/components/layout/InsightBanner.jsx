@@ -19,7 +19,7 @@ export default function InsightBanner({ children }) {
             <Zap size={14} className="text-mint-dark" fill="#0D9488" />
           </div>
 
-          <p className="text-sm leading-relaxed text-text-secondary flex-1">{children}</p>
+          <p className="text-sm leading-relaxed text-text-secondary flex-1 [&_strong]:text-ink [&_strong]:font-black">{children}</p>
 
           <button
             onClick={() => setDismissed(true)}
