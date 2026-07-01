@@ -1,179 +1,74 @@
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, ArrowRight, Send, AlignLeft, Mic } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useOrbAnimation } from '../hooks/useOrbAnimation'
-
-const QUESTIONS = [
-  'On a scale of 1–10, how would you rate your overall mood over the past week?',
-  'Have you been able to get adequate sleep most nights this week?',
-  'How confident do you feel in handling daily challenges right now?',
-]
-
-const ORB_INNER_R = 42
-const ORB_RING_RADII = [60, 80, 100]
-
-function VoiceOrb({ state }) {
-  const rings = useOrbAnimation(state)
-
-  return (
-    <div className="relative flex items-center justify-center" style={{ width: 220, height: 220 }}>
-      <svg width={220} height={220} viewBox="0 0 220 220">
-        {/* Outer rings */}
-        {ORB_RING_RADII.map((r, i) => (
-          <circle
-            key={i}
-            cx={110}
-            cy={110}
-            r={r * (rings[i]?.scale ?? 1)}
-            fill="none"
-            stroke="#2DD4A0"
-            strokeWidth={1.5 - i * 0.4}
-            opacity={rings[i]?.opacity ?? 0.3}
-            style={{ transition: 'r 0.04s linear, opacity 0.04s linear' }}
-          />
-        ))}
-        {/* Filled inner circle */}
-        <circle
-          cx={110}
-          cy={110}
-          r={ORB_INNER_R}
-          fill={state === 'speaking' ? '#2DD4A0' : '#1BB88A'}
-          opacity={1}
-        />
-        {/* Mic icon area */}
-        <g transform="translate(93,93)">
-          <Mic
-            x={0} y={0}
-            width={34}
-            height={34}
-            color={state === 'speaking' ? '#0A1628' : '#E6F9F4'}
-            strokeWidth={2}
-          />
-        </g>
-      </svg>
-
-      {/* Glow */}
-      <div
-        className="absolute inset-0 rounded-full pointer-events-none"
-        style={{
-          background: state === 'speaking'
-            ? 'radial-gradient(circle at 50%, rgba(45,212,160,0.25) 0%, transparent 70%)'
-            : 'radial-gradient(circle at 50%, rgba(45,212,160,0.10) 0%, transparent 70%)',
-          transition: 'background 0.5s ease',
-        }}
-      />
-    </div>
-  )
-}
 
 export default function VoiceSurvey() {
   const navigate = useNavigate()
-  const [qIndex, setQIndex] = useState(0)
-  const [orbState, setOrbState] = useState('speaking')
-  const [textInput, setTextInput] = useState('')
-  const progress = ((qIndex + 1) / QUESTIONS.length) * 100
-
-  // Toggle orb state every 5 seconds for demo
-  useEffect(() => {
-    const id = setInterval(() => {
-      setOrbState(s => s === 'speaking' ? 'listening' : 'speaking')
-    }, 5000)
-    return () => clearInterval(id)
-  }, [])
-
-  function nextQuestion() {
-    if (qIndex < QUESTIONS.length - 1) {
-      setQIndex(i => i + 1)
-    } else {
-      navigate('/home')
-    }
-  }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0A1628' }}>
-      {/* Topbar */}
-      <header className="flex items-center gap-4 px-6 py-4 border-b border-white/8">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-mint" fill="#2DD4A0" strokeWidth={0} />
-          </div>
-          <span className="font-bold text-white text-sm">Resilience</span>
-        </div>
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),#F4F7F9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
 
-        <div className="flex-1 mx-4">
-          <p className="text-xs text-white/40 mb-1 font-medium">Weekly Screening · Q{qIndex + 1}/{QUESTIONS.length}</p>
-          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-mint"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.4, ease: 'easeInOut' }}
-            />
-          </div>
-        </div>
+      {/* Phone frame */}
+      <div style={{ position: 'relative', overflow: 'hidden', width: 452, height: 912, borderRadius: 34, background: 'radial-gradient(620px 560px at 50% 44%,rgba(45,212,160,0.12),transparent 62%),#F4F7F9', border: '1px solid rgba(16,24,40,0.05)', boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 30px 60px -18px rgba(16,24,40,0.2)', padding: '26px 24px', display: 'flex', flexDirection: 'column' }}>
 
-        <button
-          onClick={() => navigate('/home')}
-          className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white border border-white/15 hover:border-white/30 rounded-xl px-3 py-1.5 transition-all"
-        >
-          <AlignLeft className="w-3.5 h-3.5" />
-          Switch to text
-        </button>
-      </header>
+        {/* dot grid */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(16,24,40,0.04) 1px,transparent 1px)', backgroundSize: '24px 24px', maskImage: 'radial-gradient(130% 100% at 50% 50%,#000,transparent 88%)', WebkitMaskImage: 'radial-gradient(130% 100% at 50% 50%,#000,transparent 88%)' }} />
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-8">
-        {/* Question Card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={qIndex}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-lg rounded-2xl p-6"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2 h-2 rounded-full bg-mint animate-blink" />
-              <span className="text-xs font-semibold text-mint uppercase tracking-wider">Speaking now</span>
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+          {/* Top bar */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+            <div onClick={() => navigate('/home')} style={{ cursor: 'pointer' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2.2"><path d="M15 6l-6 6 6 6"/></svg>
             </div>
-            <p className="text-white text-lg font-medium leading-relaxed">
-              {QUESTIONS[qIndex]}
-            </p>
-          </motion.div>
-        </AnimatePresence>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: '#475467', fontVariantNumeric: 'tabular-nums' }}>Question 3 of 8</span>
+            <span onClick={() => navigate('/home')} style={{ fontSize: 12.5, fontWeight: 700, color: '#98A2B3', cursor: 'pointer' }}>Exit</span>
+          </div>
 
-        {/* Orb */}
-        <VoiceOrb state={orbState} />
+          {/* Progress bar */}
+          <div style={{ height: 6, borderRadius: 999, background: 'rgba(16,24,40,0.07)', overflow: 'hidden', marginBottom: 30 }}>
+            <div style={{ width: '37.5%', height: '100%', borderRadius: 999, background: 'linear-gradient(90deg,rgba(45,212,160,0.5),#2DD4A0)', boxShadow: '0 0 12px rgba(45,212,160,0.5)' }} />
+          </div>
 
-        {/* Status */}
-        <motion.p
-          key={orbState}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-sm italic text-white/40"
-        >
-          {orbState === 'speaking' ? 'AI is asking…' : 'Listening to your response…'}
-        </motion.p>
+          {/* Question card */}
+          <div style={{ padding: 22, borderRadius: 20, background: '#fff', border: '1px solid rgba(16,24,40,0.05)', boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 12px 24px -4px rgba(16,24,40,0.1)' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#0A8a63', marginBottom: 10 }}>Resilience AI asks</div>
+            <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.45, letterSpacing: '-0.015em', color: '#0A1628' }}>Over the past week, how easily were you able to bounce back after a stressful moment?</div>
+          </div>
 
-        {/* Text input + Send */}
-        <div className="w-full max-w-lg flex gap-2">
-          <input
-            type="text"
-            placeholder="Or type your answer here…"
-            value={textInput}
-            onChange={e => setTextInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && nextQuestion()}
-            className="flex-1 bg-transparent border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-mint/60 transition-colors"
-          />
-          <button
-            onClick={nextQuestion}
-            className="w-10 h-10 rounded-xl bg-mint hover:bg-mint-mid transition-colors flex items-center justify-center flex-shrink-0"
-          >
-            <Send className="w-4 h-4 text-ink" />
-          </button>
+          {/* Orb */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ position: 'relative', width: 200, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* pulsing rings */}
+              {[0, 1, 2].map(i => (
+                <span key={i} style={{ position: 'absolute', width: 150, height: 150, borderRadius: '50%', border: '1.5px solid rgba(45,212,160,0.5)', animation: `orbring 3s ease-out infinite ${i}s` }} />
+              ))}
+              {/* orb */}
+              <div style={{ position: 'relative', width: 124, height: 124, borderRadius: '50%', background: 'radial-gradient(circle at 35% 30%,rgba(45,212,160,0.95),rgba(45,212,160,0.55) 45%,#0d7a5a)', boxShadow: '0 0 60px rgba(45,212,160,0.5),inset 0 0 30px rgba(255,255,255,0.3)', animation: 'breathe 2.6s ease-in-out infinite', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* wave bars */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: 42 }}>
+                  {[0, 0.15, 0.3, 0.45, 0.6].map((delay, i) => (
+                    <div key={i} style={{ width: 4, background: 'rgba(6,53,42,0.75)', borderRadius: 2, animation: `wave 1s ease-in-out infinite ${delay}s`, height: '18%' }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 30, fontSize: 14, fontWeight: 700, color: '#0A8a63' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#2DD4A0', animation: 'onlinepulse 2s infinite', flexShrink: 0 }} />
+              Listening…
+            </div>
+            <div style={{ fontSize: 12.5, color: '#667085', fontWeight: 500, marginTop: 8, textAlign: 'center', maxWidth: 260 }}>
+              Speak naturally — I'll follow up if I need more detail.
+            </div>
+          </div>
+
+          {/* Text fallback */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 7px 7px 16px', borderRadius: 15, background: '#fff', border: '1px solid rgba(16,24,40,0.08)', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+            <span style={{ flex: 1, fontSize: 13.5, color: '#98A2B3', fontWeight: 500 }}>Type your answer instead…</span>
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: '#2DD4A0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px -4px rgba(45,212,160,0.5)', cursor: 'pointer' }} onClick={() => navigate('/home')}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06352a" strokeWidth="2.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,222 +1,120 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Zap, ChevronRight, Clock, Sparkles, BarChart3, CheckCircle, Bell, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const SCREENINGS = [
   {
-    id: 1,
-    status: 'new',
-    type: 'Weekly Check-in',
-    name: 'Resilience & Coping Skills',
-    daysLeft: 5,
-    cta: 'Start Screening',
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A8a63" strokeWidth="2.4"><path d="M12 5v14M5 12h14"/></svg>,
+    iconBg: 'rgba(45,212,160,0.14)',
+    title: 'Weekly Resilience Check',
+    sub: '8 questions · ~4 min',
+    subColor: '#667085',
+    action: 'start',
+    border: '1px solid rgba(45,212,160,0.25)',
+    shadow: '0 1px 2px rgba(16,24,40,0.04),0 12px 24px -6px rgba(45,212,160,0.22)',
   },
   {
-    id: 2,
-    status: 'due',
-    type: 'Monthly Assessment',
-    name: 'Emotional Wellbeing Index',
-    daysLeft: 2,
-    cta: 'Complete Now',
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC6803" strokeWidth="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>,
+    iconBg: 'rgba(247,144,9,0.12)',
+    title: 'Sleep & Mood Journal',
+    sub: 'Due in 2 days',
+    subColor: '#DC6803',
+    action: 'due',
+    border: '1px solid rgba(16,24,40,0.05)',
+    shadow: '0 1px 2px rgba(16,24,40,0.04),0 12px 24px -4px rgba(16,24,40,0.1)',
   },
   {
-    id: 3,
-    status: 'done',
-    type: 'Baseline Screening',
-    name: 'PHQ-9 Depression Screen',
-    daysLeft: 0,
-    cta: 'View Results',
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A8a63" strokeWidth="2.6"><path d="M20 6L9 17l-5-5"/></svg>,
+    iconBg: 'rgba(45,212,160,0.1)',
+    title: 'Anxiety Baseline (GAD-7)',
+    sub: 'Completed Mon · Score 6',
+    subColor: '#98A2B3',
+    action: 'done',
+    border: '1px solid rgba(16,24,40,0.05)',
+    shadow: '0 1px 2px rgba(16,24,40,0.04),0 12px 24px -4px rgba(16,24,40,0.1)',
   },
 ]
-
-const STATUS_CONFIG = {
-  new: {
-    pill: 'status-pill-new',
-    label: 'New',
-    Icon: Sparkles,
-    iconColor: '#2DD4A0',
-  },
-  due: {
-    pill: 'status-pill-due',
-    label: 'Due Soon',
-    Icon: BarChart3,
-    iconColor: '#F0B429',
-  },
-  done: {
-    pill: 'status-pill-done',
-    label: 'Completed',
-    Icon: CheckCircle,
-    iconColor: 'rgba(255,255,255,0.3)',
-  },
-}
-
-function ScreeningCard({ screening, index, onStart }) {
-  const { pill, label, Icon, iconColor } = STATUS_CONFIG[screening.status]
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.12 + index * 0.09, duration: 0.35 }}
-      className="glass-card p-5 flex flex-col gap-3"
-    >
-      <div className="flex items-start justify-between">
-        <span className={pill}>{label}</span>
-        {screening.status !== 'done' && screening.daysLeft > 0 && (
-          <span className="flex items-center gap-1 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            <Clock className="w-3 h-3" />
-            {screening.daysLeft}d left
-          </span>
-        )}
-      </div>
-
-      <div>
-        <p className="label-eyebrow mb-1">{screening.type}</p>
-        <h3 className="text-[15px] font-semibold text-white leading-snug">{screening.name}</h3>
-      </div>
-
-      <button
-        onClick={() => screening.status !== 'done' && onStart()}
-        disabled={screening.status === 'done'}
-        className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all ${
-          screening.status === 'done'
-            ? 'cursor-default'
-            : 'btn-mint'
-        }`}
-        style={screening.status === 'done' ? { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)' } : {}}
-      >
-        {screening.cta}
-      </button>
-    </motion.div>
-  )
-}
 
 export default function UserHome() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B0F0E' }}>
-      {/* Topbar */}
-      <header className="topbar-blur sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: '#0F1715', border: '1px solid rgba(45,212,160,0.2)' }}
-            >
-              <Zap className="w-4 h-4 text-mint" fill="#2DD4A0" strokeWidth={0} />
-            </div>
-            <span className="font-bold text-white text-sm">Resilience</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              className="w-8 h-8 rounded-lg flex items-center justify-center relative transition-colors"
-              style={{ background: 'rgba(255,255,255,0.04)' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-            >
-              <Bell className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-mint" />
-            </button>
-            <div
-              className="flex items-center gap-2 px-2 py-1 rounded-xl"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              <div
-                className="w-6 h-6 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(45,212,160,0.15)' }}
-              >
-                <User className="w-3.5 h-3.5" style={{ color: '#2DD4A0' }} />
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),#F4F7F9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+      {/* Mobile phone frame */}
+      <div style={{ position: 'relative', overflow: 'hidden', width: 452, minHeight: 912, borderRadius: 34, background: 'radial-gradient(560px 420px at 100% -6%,rgba(45,212,160,0.07),transparent 55%),#F4F7F9', border: '1px solid rgba(16,24,40,0.05)', boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 30px 60px -18px rgba(16,24,40,0.2)', padding: '26px 22px 32px' }}>
+
+        {/* dot grid */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(16,24,40,0.045) 1px,transparent 1px)', backgroundSize: '24px 24px', maskImage: 'radial-gradient(130% 90% at 50% 18%,#000,transparent 92%)', WebkitMaskImage: 'radial-gradient(130% 90% at 50% 18%,#000,transparent 92%)' }} />
+
+        <div style={{ position: 'relative' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22 }}>
+            <div>
+              <div style={{ fontSize: 13, color: '#667085', fontWeight: 600 }}>Good morning,</div>
+              <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.025em', marginTop: 2, color: '#0A1628' }}>Sarah</div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 9, fontSize: 11, fontWeight: 700, color: '#0A8a63', background: 'rgba(45,212,160,0.13)', border: '1px solid rgba(45,212,160,0.22)', padding: '4px 10px', borderRadius: 20 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2DD4A0', flexShrink: 0 }} />CBT Program
               </div>
-              <span className="text-sm font-medium text-white">Priya S.</span>
+            </div>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#1d3a5f,#0A1628)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#fff', boxShadow: '0 4px 10px -2px rgba(16,24,40,0.25)' }}>SM</div>
+          </div>
+
+          {/* Insight banner — dark exception */}
+          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 20, padding: 20, marginBottom: 22, color: '#fff', background: 'repeating-radial-gradient(circle at 100% 0%,rgba(45,212,160,0.06) 0 1.5px,transparent 1.5px 22px),radial-gradient(70% 110% at 100% 0%,rgba(45,212,160,0.32),transparent 58%),#0A1628', boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 18px 34px -12px rgba(16,24,40,0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#2DD4A0', marginBottom: 10 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+              This week's insight
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.45, letterSpacing: '-0.01em' }}>
+              Your resilience score is up <span style={{ color: '#2DD4A0', fontWeight: 800 }}>+4 points</span>. Your sleep consistency is driving the gain — keep it up.
             </div>
           </div>
-        </div>
-      </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
-        {/* Welcome */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex items-center gap-3 mb-1 flex-wrap">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Good morning, Priya</h1>
-            <span
-              className="px-2.5 py-0.5 text-xs font-semibold rounded-full tracking-wide"
-              style={{ background: 'rgba(45,212,160,0.12)', color: '#2DD4A0', border: '1px solid rgba(45,212,160,0.2)' }}
-            >
-              CBT Program
-            </span>
-          </div>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            Here's your wellbeing overview for today.
-          </p>
-        </motion.div>
-
-        {/* Insight Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.4 }}
-          className="insight-glow"
-        >
-          <p className="text-sm text-white leading-relaxed">
-            Your resilience scores improved{' '}
-            <span className="font-bold" style={{ color: '#2DD4A0' }}>+14%</span>{' '}
-            over the last 3 weeks. Keep building those coping strategies — you're on a great trajectory.
-          </p>
-        </motion.div>
-
-        {/* Screening Cards */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[15px] font-bold text-white">Your Screenings</h2>
-            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              {SCREENINGS.filter(s => s.status !== 'done').length} active
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {SCREENINGS.map((screening, i) => (
-              <ScreeningCard
-                key={screening.id}
-                screening={screening}
-                index={i}
-                onStart={() => navigate('/survey/1/voice')}
-              />
+          {/* Screenings */}
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#667085', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 12 }}>Your screenings</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginBottom: 22 }}>
+            {SCREENINGS.map((s, i) => (
+              <div key={i}
+                onClick={() => s.action === 'start' && navigate('/survey/1/voice')}
+                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, background: '#fff', border: s.border, cursor: 'pointer', boxShadow: s.shadow, transition: 'transform .22s cubic-bezier(.4,0,.2,1),box-shadow .25s cubic-bezier(.4,0,.2,1)' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = '' }}
+              >
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: s.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{s.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.01em', color: '#0A1628' }}>{s.title}</div>
+                  <div style={{ fontSize: 12, color: s.subColor, fontWeight: 500, marginTop: 2 }}>{s.sub}</div>
+                </div>
+                {s.action === 'start' && (
+                  <span style={{ fontSize: 12.5, fontWeight: 800, color: '#06352a', background: '#2DD4A0', padding: '8px 15px', borderRadius: 10, boxShadow: '0 6px 14px -4px rgba(45,212,160,0.5)' }}>Start</span>
+                )}
+                {s.action === 'due' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2.4"><path d="M9 6l6 6-6 6"/></svg>
+                )}
+                {s.action === 'done' && (
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#667085' }}>View</span>
+                )}
+              </div>
             ))}
           </div>
-        </div>
 
-        {/* AI Copilot CTA */}
-        <motion.button
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.4 }}
-          onClick={() => navigate('/survey/1/voice')}
-          className="w-full glass-card p-5 flex items-center gap-4 group text-left"
-          style={{ background: '#0F1715' }}
-        >
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
-            style={{ background: 'rgba(45,212,160,0.10)' }}
+          {/* AI Copilot CTA */}
+          <div style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: 14, padding: 18, borderRadius: 18, background: '#fff', border: '1px solid rgba(16,24,40,0.05)', boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 14px 28px -8px rgba(16,24,40,0.14)', cursor: 'pointer', transition: 'transform .22s cubic-bezier(.4,0,.2,1)' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-3px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = ''}
           >
-            <Zap className="w-5 h-5 text-mint" fill="#2DD4A0" strokeWidth={0} />
+            <div style={{ position: 'relative', width: 46, height: 46, flexShrink: 0, borderRadius: 13, background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px -4px rgba(16,24,40,0.4)' }}>
+              <div style={{ width: 15, height: 15, background: '#2DD4A0', transform: 'rotate(45deg)', borderRadius: 2 }} />
+              <span style={{ position: 'absolute', inset: 0, borderRadius: 13, border: '2px solid #2DD4A0', animation: 'pulsering 2.4s cubic-bezier(.4,0,.2,1) infinite', pointerEvents: 'none' }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14.5, fontWeight: 800, letterSpacing: '-0.01em', color: '#0A1628' }}>Talk to your AI Copilot</div>
+              <div style={{ fontSize: 12, color: '#667085', fontWeight: 500, marginTop: 2 }}>Ask anything about your progress</div>
+            </div>
+            <div style={{ width: 36, height: 36, borderRadius: 11, background: '#2DD4A0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px -4px rgba(45,212,160,0.5)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06352a" strokeWidth="2.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-white font-semibold text-[15px] mb-0.5">Talk to your AI Copilot</p>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              Voice-guided check-in, anywhere, anytime
-            </p>
-          </div>
-          <ChevronRight
-            className="w-5 h-5 flex-shrink-0 transition-all group-hover:translate-x-1"
-            style={{ color: 'rgba(255,255,255,0.2)' }}
-          />
-        </motion.button>
-      </main>
+        </div>
+      </div>
     </div>
   )
 }

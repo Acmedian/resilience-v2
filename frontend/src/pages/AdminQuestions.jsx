@@ -1,317 +1,136 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, ChevronDown, CheckCircle2, Trash2, Plus } from 'lucide-react'
-import Topbar from '../components/layout/Topbar'
 
-const QUESTION_TYPES = ['MCQ', 'Rating', 'Fill', 'True/False']
-const FILTER_CHIPS = ['All', 'MCQ', 'Rating', 'Fill', 'True/False']
+const TONES = ['Empathetic', 'Clinical', 'Casual']
 
-const QUESTION_BANK = [
-  { id: 1, text: 'I feel able to bounce back after setbacks.', type: 'Rating', category: 'Resilience' },
-  { id: 2, text: 'Which coping strategy do you use most?', type: 'MCQ', category: 'Coping' },
-  { id: 3, text: 'I have felt hopeful about the future recently.', type: 'True/False', category: 'Wellbeing' },
-  { id: 4, text: 'Complete: "When I feel stressed, I usually…"', type: 'Fill', category: 'Stress' },
-  { id: 5, text: 'Rate your sleep quality on average this week.', type: 'Rating', category: 'Sleep' },
-  { id: 6, text: 'What activity most helped your mood this week?', type: 'MCQ', category: 'Mood' },
+const QUESTIONS_DATA = [
+  { num: 1, text: 'Over the past two weeks, how rested did you feel when you woke up in the morning?', tags: ['Likert 1–5', 'Sleep'] },
+  { num: 2, text: 'When you felt stressed during the day, how often did it trace back to poor sleep the night before?', tags: ['Likert 1–5', 'Stress link'] },
+  { num: 3, text: 'How confident did you feel using a coping strategy to wind down before bed?', tags: ['Likert 1–5', 'Coping'] },
 ]
-
-const AI_TEMPLATES = [
-  {
-    id: 'g1',
-    text: 'On a scale of 1–10, how confident do you feel managing your emotions in stressful situations?',
-    type: 'Rating',
-    options: ['1 (Not at all)', '5 (Moderately)', '10 (Very confident)'],
-  },
-  {
-    id: 'g2',
-    text: 'Which of the following best describes your primary coping strategy?',
-    type: 'MCQ',
-    options: ['Physical exercise', 'Talking to someone', 'Journaling', 'Distraction activities'],
-  },
-  {
-    id: 'g3',
-    text: 'I feel supported by people around me when I am going through a difficult time.',
-    type: 'True/False',
-    options: ['True', 'False'],
-  },
-]
-
-const TYPE_COLORS = {
-  Rating: { bg: 'rgba(59,130,246,0.12)', text: '#60A5FA' },
-  MCQ: { bg: 'rgba(139,92,246,0.12)', text: '#A78BFA' },
-  Fill: { bg: 'rgba(240,180,41,0.12)', text: '#F0B429' },
-  'True/False': { bg: 'rgba(45,212,160,0.12)', text: '#2DD4A0' },
-}
-
-function TypeBadge({ type }) {
-  const { bg, text } = TYPE_COLORS[type] || { bg: 'rgba(255,255,255,0.06)', text: 'rgba(255,255,255,0.4)' }
-  return (
-    <span
-      className="text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0"
-      style={{ background: bg, color: text }}
-    >
-      {type}
-    </span>
-  )
-}
 
 export default function AdminQuestions() {
-  const [activeNav, setActiveNav] = useState('Screenings')
-  const [topic, setTopic] = useState('')
-  const [qType, setQType] = useState('MCQ')
-  const [count, setCount] = useState(3)
-  const [previews, setPreviews] = useState([])
-  const [generating, setGenerating] = useState(false)
-  const [approvedIds, setApprovedIds] = useState(new Set())
-  const [filter, setFilter] = useState('All')
+  const [tone, setTone] = useState('Empathetic')
+  const [count, setCount] = useState(6)
+  const [approved, setApproved] = useState(new Set())
+  const [rejected, setRejected] = useState(new Set())
 
-  function handleGenerate() {
-    if (!topic.trim()) return
-    setGenerating(true)
-    setPreviews([])
-    setTimeout(() => {
-      setPreviews(AI_TEMPLATES.slice(0, Math.min(count, AI_TEMPLATES.length)))
-      setGenerating(false)
-    }, 900)
-  }
-
-  function approveCard(id) {
-    setApprovedIds(s => new Set([...s, id]))
-  }
-
-  function discardCard(id) {
-    setPreviews(p => p.filter(q => q.id !== id))
-    setApprovedIds(s => { const n = new Set(s); n.delete(id); return n })
-  }
-
-  function approveAll() {
-    setApprovedIds(new Set(previews.map(p => p.id)))
-  }
-
-  const filtered = filter === 'All'
-    ? QUESTION_BANK
-    : QUESTION_BANK.filter(q => q.type === filter)
+  function approve(num) { setApproved(s => new Set([...s, num])); setRejected(s => { const n = new Set(s); n.delete(num); return n }) }
+  function reject(num) { setRejected(s => new Set([...s, num])); setApproved(s => { const n = new Set(s); n.delete(num); return n }) }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0B0F0E' }}>
-      <Topbar activeNav={activeNav} onNavChange={setActiveNav} />
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),#F4F7F9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+      <div style={{ position: 'relative', overflow: 'hidden', width: '100%', maxWidth: 1280, height: 840, borderRadius: 26, background: 'radial-gradient(760px 460px at 100% -6%,rgba(45,212,160,0.06),transparent 55%),#F4F7F9', border: '1px solid rgba(16,24,40,0.05)', boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 30px 60px -18px rgba(16,24,40,0.2)', display: 'flex', flexDirection: 'column' }}>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-        {/* AI Generator Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="glass-card p-6"
-        >
-          <div className="flex items-center gap-3 mb-5">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: 'rgba(45,212,160,0.10)' }}
-            >
-              <Sparkles className="w-4 h-4" style={{ color: '#2DD4A0' }} />
-            </div>
-            <div>
-              <h2 className="text-[15px] font-bold text-white">Generate with AI</h2>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                Describe a topic and let AI draft screening questions
-              </p>
-            </div>
+        {/* Header */}
+        <div style={{ padding: '22px 28px', borderBottom: '1px solid rgba(16,24,40,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.6)' }}>
+          <div>
+            <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-0.025em', color: '#0A1628' }}>New Screening</div>
+            <div style={{ fontSize: 12.5, color: '#667085', fontWeight: 500, marginTop: 2 }}>Describe what you want to measure — AI drafts the questions</div>
           </div>
-
-          <textarea
-            rows={3}
-            placeholder="e.g. Resilience and emotional regulation strategies for adults with chronic stress…"
-            value={topic}
-            onChange={e => setTopic(e.target.value)}
-            className="input resize-none mb-4 text-sm"
-          />
-
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[140px]">
-              <select
-                value={qType}
-                onChange={e => setQType(e.target.value)}
-                className="input appearance-none pr-8 text-sm"
-                style={{ background: 'rgba(255,255,255,0.05)' }}
-              >
-                {QUESTION_TYPES.map(t => <option key={t} style={{ background: '#0F1715' }}>{t}</option>)}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }} />
-            </div>
-
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={count}
-              onChange={e => setCount(Number(e.target.value))}
-              className="input w-20 text-center text-sm"
-            />
-
-            <button
-              onClick={handleGenerate}
-              disabled={generating || !topic.trim()}
-              className="btn-mint disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Sparkles className="w-4 h-4" />
-              {generating ? 'Generating…' : 'Generate'}
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Preview Cards */}
-        <AnimatePresence>
-          {previews.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-white">AI Preview</h3>
-                <button
-                  onClick={approveAll}
-                  className="flex items-center gap-1.5 text-xs font-semibold transition-colors"
-                  style={{ color: '#2DD4A0' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#5EEAC0'}
-                  onMouseLeave={e => e.currentTarget.style.color = '#2DD4A0'}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Approve all ({previews.length})
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {previews.map((q, i) => (
-                  <motion.div
-                    key={q.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ delay: i * 0.1, duration: 0.3 }}
-                    className="glass-card p-5"
-                    style={approvedIds.has(q.id) ? { borderColor: 'rgba(45,212,160,0.35)' } : {}}
-                  >
-                    <div className="flex items-start gap-3 mb-3">
-                      <TypeBadge type={q.type} />
-                      <p className="text-sm font-medium text-white leading-relaxed flex-1">{q.text}</p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {q.options.map((opt, j) => (
-                        <span
-                          key={j}
-                          className="text-xs px-3 py-1 rounded-lg"
-                          style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.07)' }}
-                        >
-                          {opt}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex gap-2">
-                      {approvedIds.has(q.id) ? (
-                        <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#2DD4A0' }}>
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Approved
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => approveCard(q.id)}
-                          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors"
-                          style={{ background: 'rgba(45,212,160,0.12)', color: '#2DD4A0' }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(45,212,160,0.2)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(45,212,160,0.12)'}
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Approve
-                        </button>
-                      )}
-                      <button
-                        onClick={() => discardCard(q.id)}
-                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl transition-colors"
-                        style={{ color: '#E5534B' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(229,83,75,0.10)' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Discard
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Question Bank */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[15px] font-bold text-white">Question Bank</h2>
-            <button
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors"
-              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.07)' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(45,212,160,0.3)'; e.currentTarget.style.color = '#2DD4A0' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)' }}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add question
-            </button>
-          </div>
-
-          {/* Filter Chips */}
-          <div className="flex gap-2 flex-wrap mb-4">
-            {FILTER_CHIPS.map(chip => (
-              <button
-                key={chip}
-                onClick={() => setFilter(chip)}
-                className="text-xs font-medium px-3 py-1.5 rounded-full border transition-all"
-                style={filter === chip
-                  ? { background: 'rgba(45,212,160,0.15)', color: '#2DD4A0', borderColor: 'rgba(45,212,160,0.3)' }
-                  : { background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', borderColor: 'rgba(255,255,255,0.08)' }
-                }
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-
-          {/* Table */}
-          <div className="glass-card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(45,212,160,0.08)' }}>
-                  <th className="px-5 py-3 text-left label-eyebrow">Question</th>
-                  <th className="px-4 py-3 text-left label-eyebrow w-28">Type</th>
-                  <th className="px-4 py-3 text-left label-eyebrow w-32">Category</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((q, i) => (
-                  <motion.tr
-                    key={q.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="transition-colors"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td className="px-5 py-4 leading-snug" style={{ color: 'rgba(255,255,255,0.7)' }}>{q.text}</td>
-                    <td className="px-4 py-4">
-                      <TypeBadge type={q.type} />
-                    </td>
-                    <td className="px-4 py-4 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{q.category}</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 700, color: '#0A8a63', background: 'rgba(45,212,160,0.12)', border: '1px solid rgba(45,212,160,0.22)', padding: '7px 13px', borderRadius: 9 }}>
+            <div style={{ width: 7, height: 7, background: '#2DD4A0', transform: 'rotate(45deg)', borderRadius: 1, flexShrink: 0 }} />AI-assisted
           </div>
         </div>
-      </main>
+
+        {/* Two columns */}
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '380px 1fr', minHeight: 0 }}>
+
+          {/* Config panel */}
+          <div style={{ padding: 24, borderRight: '1px solid rgba(16,24,40,0.06)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* Prompt */}
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475467', marginBottom: 9 }}>What should this screening measure?</label>
+              <div style={{ height: 128, padding: 14, borderRadius: 13, background: '#fff', border: '1px solid rgba(16,24,40,0.1)', fontSize: 13.5, lineHeight: 1.55, color: '#1f2937', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
+                Assess sleep quality and its impact on daytime stress for patients in the CBT program over the past two weeks.
+                <span style={{ display: 'inline-block', width: 8, height: 15, background: '#2DD4A0', borderRadius: 1, verticalAlign: -2, marginLeft: 1, animation: 'recblink 1s infinite' }} />
+              </div>
+            </div>
+
+            {/* Question type + Count */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475467', marginBottom: 9 }}>Question type</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 44, padding: '0 14px', borderRadius: 12, background: '#fff', border: '1px solid rgba(16,24,40,0.1)', fontSize: 13, fontWeight: 600, color: '#0A1628', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
+                  Likert scale
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2.2"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475467', marginBottom: 9 }}>Count</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 44, padding: '0 6px 0 14px', borderRadius: 12, background: '#fff', border: '1px solid rgba(16,24,40,0.1)', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#0A1628', fontVariantNumeric: 'tabular-nums' }}>{count}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div onClick={() => setCount(c => Math.min(c + 1, 20))} style={{ width: 26, height: 16, borderRadius: 5, background: 'rgba(16,24,40,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="3"><path d="M18 15l-6-6-6 6"/></svg>
+                    </div>
+                    <div onClick={() => setCount(c => Math.max(c - 1, 1))} style={{ width: 26, height: 16, borderRadius: 5, background: 'rgba(16,24,40,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tone */}
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475467', marginBottom: 9 }}>Tone</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {TONES.map(t => (
+                  <span key={t} onClick={() => setTone(t)}
+                    style={{ fontSize: 12.5, fontWeight: tone === t ? 700 : 600, color: tone === t ? '#06352a' : '#475467', background: tone === t ? '#2DD4A0' : '#fff', border: tone === t ? 'none' : '1px solid rgba(16,24,40,0.08)', padding: '8px 14px', borderRadius: 9, cursor: 'pointer', boxShadow: tone !== t ? '0 1px 2px rgba(16,24,40,0.04)' : 'none', transition: 'all .15s' }}
+                  >{t}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Generate button */}
+            <button style={{ marginTop: 'auto', height: 50, border: 'none', borderRadius: 13, background: '#2DD4A0', color: '#06352a', fontSize: 14.5, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, boxShadow: '0 10px 26px -8px rgba(45,212,160,0.6)' }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#06352a" strokeWidth="2.4"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+              Generate questions
+            </button>
+          </div>
+
+          {/* Generated questions preview */}
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, background: 'rgba(255,255,255,0.5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px 12px' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-0.01em', color: '#0A1628' }}>
+                Generated questions <span style={{ color: '#98A2B3', fontWeight: 600 }}>· {count} drafts</span>
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#0A8a63', cursor: 'pointer' }}>Approve all</span>
+            </div>
+
+            <div style={{ flex: 1, overflow: 'hidden', padding: '6px 24px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {QUESTIONS_DATA.map(q => {
+                const isApproved = approved.has(q.num)
+                const isRejected = rejected.has(q.num)
+                return (
+                  <div key={q.num} style={{ padding: '16px 18px', borderRadius: 15, background: '#fff', border: `1px solid ${isApproved ? 'rgba(45,212,160,0.3)' : isRejected ? 'rgba(240,68,56,0.2)' : 'rgba(16,24,40,0.05)'}`, boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 10px 22px -6px rgba(16,24,40,0.1)', display: 'flex', gap: 14, alignItems: 'flex-start', opacity: isRejected ? 0.5 : 1, transition: 'all .2s' }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 8, background: 'rgba(45,212,160,0.14)', color: '#0A8a63', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{q.num}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.5, color: '#1f2937' }}>{q.text}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 9 }}>
+                        {q.tags.map(tag => (
+                          <span key={tag} style={{ fontSize: 10.5, fontWeight: 700, color: '#667085', background: 'rgba(16,24,40,0.05)', padding: '3px 8px', borderRadius: 6 }}>{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
+                      <div onClick={() => approve(q.num)} style={{ width: 32, height: 32, borderRadius: 9, background: isApproved ? 'rgba(45,212,160,0.24)' : 'rgba(45,212,160,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .15s' }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A8a63" strokeWidth="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+                      </div>
+                      <div onClick={() => reject(q.num)} style={{ width: 32, height: 32, borderRadius: 9, background: isRejected ? 'rgba(240,68,56,0.12)' : '#fff', border: '1px solid rgba(16,24,40,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background .15s' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isRejected ? '#F04438' : '#667085'} strokeWidth="2.4"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, fontSize: 12.5, fontWeight: 600, color: '#98A2B3' }}>+ {count - 3} more questions below</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
