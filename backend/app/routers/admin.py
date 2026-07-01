@@ -21,6 +21,6 @@ def get_stats(db: Session = Depends(get_db)):
         "total_scribe_sessions": db.query(ScribeSession).count(),
         "users_by_role": {
             role: db.query(User).filter(User.role == role).count()
-            for role in ["superadmin", "admin", "doctor", "nurse", "staff"]
+            for role in ["patient", "clinician", "admin"]
         },
     }

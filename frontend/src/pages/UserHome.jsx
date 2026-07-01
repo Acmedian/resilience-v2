@@ -37,7 +37,7 @@ export default function UserHome() {
           <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 12 }}>Your screenings</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginBottom: 22 }}>
 
-            <div onClick={() => navigate('/survey/1/voice')} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, background: 'rgba(45,212,160,0.08)', border: '1px solid rgba(45,212,160,0.25)', boxShadow: '0 1px 2px rgba(0,0,0,0.2),0 12px 26px -10px rgba(45,212,160,0.35)', cursor: 'pointer' }}>
+            <div onClick={() => navigate('/screening/1')} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, background: 'rgba(45,212,160,0.08)', border: '1px solid rgba(45,212,160,0.25)', boxShadow: '0 1px 2px rgba(0,0,0,0.2),0 12px 26px -10px rgba(45,212,160,0.35)', cursor: 'pointer' }}>
               <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(45,212,160,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DD4A0" strokeWidth="2.4"><path d="M12 5v14M5 12h14"/></svg>
               </div>

@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-import httpx
+from fastapi import HTTPException, status
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
@@ -9,10 +11,8 @@ from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 
-
-def hash_password(password: str) -> str:
+def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
@@ -29,19 +29,31 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
-def decode_access_token(token: str) -> Optional[dict]:
+def verify_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except JWTError:
-        return None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
-async def verify_google_token(token: str) -> Optional[dict]:
-    async with httpx.AsyncClient() as client:
-        response = await client.get(GOOGLE_TOKEN_INFO_URL, params={"id_token": token})
-        if response.status_code != 200:
-            return None
-        data = response.json()
-        if data.get("aud") != settings.GOOGLE_CLIENT_ID:
-            return None
-        return data
+def verify_google_token(token: str) -> dict:
+    try:
+        idinfo = google_id_token.verify_oauth2_token(
+            token, google_requests.Request(), settings.GOOGLE_CLIENT_ID
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google token",
+        )
+
+    return {
+        "email": idinfo.get("email"),
+        "name": idinfo.get("name", idinfo.get("email")),
+        "google_id": idinfo.get("sub"),
+        "picture": idinfo.get("picture"),
+    }

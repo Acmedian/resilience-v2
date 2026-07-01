@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { GoogleLogin } from '@react-oauth/google'
+import { useAuth } from '../contexts/AuthContext'
+import { api } from '../lib/api'
 
 const PAGE_BG = {
   position: 'relative',
@@ -15,18 +18,80 @@ const PAGE_BG = {
   justifyContent: 'center',
 }
 
+const inputWrapStyle = { display: 'flex', alignItems: 'center', gap: 10, height: 46, padding: '0 14px', borderRadius: 12, background: '#F9FAFB', border: '1px solid rgba(16,24,40,0.1)', marginBottom: 16 }
+const inputStyle = { flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: 14, color: '#0A1628', fontWeight: 500, fontFamily: 'inherit' }
+
 export default function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [role, setRole] = useState('Patient')
-  const [email, setEmail] = useState('sarah.mitchell@email.com')
-
-  function handleSignIn() {
-    if (role === 'Patient')    navigate('/home')
-    else if (role === 'Clinician') navigate('/scribe')
-    else navigate('/admin')
-  }
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const roles = ['Patient', 'Clinician', 'Admin']
+
+  function goToRoleHome(userRole) {
+    const path = { patient: '/home', clinician: '/clinician/patients', admin: '/admin' }[userRole] || '/login'
+    navigate(path, { replace: true })
+  }
+
+  function selectRole(r) {
+    setRole(r)
+    setError('')
+  }
+
+  async function handleGoogleSuccess(credentialResponse) {
+    setError('')
+    setSubmitting(true)
+    try {
+      const data = await api.post('/api/auth/google', { id_token: credentialResponse.credential })
+      if (!data || !data.access_token) {
+        setError(data?.detail || 'Google sign-in failed. Please try again.')
+        return
+      }
+      login(data.access_token, data.user)
+      goToRoleHome(data.user.role)
+    } catch {
+      setError('Google sign-in failed. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleSignIn() {
+    if (role === 'Patient') {
+      setError('Use "Sign in with Google" below to continue as a patient.')
+      return
+    }
+
+    if (!email || !password) {
+      setError('Please enter your email and password.')
+      return
+    }
+
+    setError('')
+    setSubmitting(true)
+    try {
+      const data = await api.post('/api/auth/login', { email, password })
+      if (!data || !data.access_token) {
+        setError(data?.detail || 'Invalid credentials.')
+        return
+      }
+      login(data.access_token, data.user)
+      goToRoleHome(data.user.role)
+    } catch {
+      setError('Unable to reach the server. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') handleSignIn()
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),#F4F7F9', padding: '40px 24px' }}>
@@ -74,64 +139,77 @@ export default function Login() {
             {/* Role tabs */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: 4, borderRadius: 12, background: 'rgba(16,24,40,0.05)', marginBottom: 22 }}>
               {roles.map(r => (
-                <div key={r} onClick={() => setRole(r)}
+                <div key={r} onClick={() => selectRole(r)}
                   style={{ textAlign: 'center', fontSize: 13, fontWeight: role === r ? 700 : 600, color: role === r ? '#06352a' : '#667085', padding: '9px 0', borderRadius: 9, background: role === r ? '#2DD4A0' : 'transparent', boxShadow: role === r ? '0 4px 12px -3px rgba(45,212,160,0.5)' : 'none', cursor: 'pointer', transition: 'all .15s' }}
                 >{r}</div>
               ))}
             </div>
 
-            {/* Email */}
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475467', marginBottom: 7 }}>Email</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 46, padding: '0 14px', borderRadius: 12, background: '#F9FAFB', border: '1px solid rgba(16,24,40,0.1)', marginBottom: 16 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-              <span style={{ fontSize: 14, color: '#98A2B3', fontWeight: 500 }}>{email}</span>
-            </div>
+            {role === 'Patient' ? (
+              <>
+                <div style={{ fontSize: 13.5, color: '#475467', fontWeight: 500, lineHeight: 1.6, marginBottom: 22 }}>
+                  Patients sign in securely with their Google account — no password required.
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError('Google sign-in failed. Please try again.')}
+                    theme="filled_black"
+                    shape="pill"
+                    size="large"
+                    text="signin_with"
+                    width="260"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Email */}
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475467', marginBottom: 7 }}>Email</label>
+                <div style={inputWrapStyle}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={role === 'Clinician' ? 'clinician@demo.com' : 'admin@demo.com'}
+                    style={inputStyle}
+                  />
+                </div>
 
-            {/* Password */}
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475467', marginBottom: 7 }}>Password</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 46, padding: '0 14px', borderRadius: 12, background: '#F9FAFB', border: '1px solid rgba(16,24,40,0.1)', marginBottom: 10 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
-              <span style={{ flex: 1, fontSize: 14, color: '#475467', fontWeight: 600, letterSpacing: 2 }}>••••••••••</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-            </div>
-            <div style={{ textAlign: 'right', marginBottom: 18 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#0A8a63', cursor: 'pointer' }}>Forgot password?</span>
-            </div>
+                {/* Password */}
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475467', marginBottom: 7 }}>Password</label>
+                <div style={{ ...inputWrapStyle, marginBottom: 10 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="••••••••••"
+                    style={{ ...inputStyle, letterSpacing: showPassword ? 'normal' : 2 }}
+                  />
+                  <svg onClick={() => setShowPassword(s => !s)} style={{ cursor: 'pointer' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+                <div style={{ textAlign: 'right', marginBottom: 18 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#0A8a63', cursor: 'pointer' }}>Forgot password?</span>
+                </div>
 
-            {/* Sign in */}
-            <button onClick={handleSignIn}
-              style={{ width: '100%', height: 48, border: 'none', borderRadius: 13, background: '#2DD4A0', color: '#06352a', fontSize: 14.5, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 10px 24px -8px rgba(45,212,160,0.6)', transition: 'box-shadow .25s ease' }}
-              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 14px 30px -8px rgba(45,212,160,0.75)'}
-              onMouseLeave={e => e.currentTarget.style.boxShadow = '0 10px 24px -8px rgba(45,212,160,0.6)'}
-            >Sign in</button>
+                {/* Sign in */}
+                <button onClick={handleSignIn} disabled={submitting}
+                  style={{ width: '100%', height: 48, border: 'none', borderRadius: 13, background: '#2DD4A0', color: '#06352a', fontSize: 14.5, fontWeight: 800, fontFamily: 'inherit', cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1, boxShadow: '0 10px 24px -8px rgba(45,212,160,0.6)', transition: 'box-shadow .25s ease' }}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 14px 30px -8px rgba(45,212,160,0.75)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 10px 24px -8px rgba(45,212,160,0.6)'}
+                >{submitting ? 'Signing in…' : 'Sign in'}</button>
+              </>
+            )}
 
-            {/* Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(16,24,40,0.08)' }} />
-              <span style={{ fontSize: 11.5, color: '#98A2B3', fontWeight: 600 }}>or continue with</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(16,24,40,0.08)' }} />
-            </div>
-
-            {/* SSO buttons */}
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-              {/* Google */}
-              <div style={{ width: 56, height: 48, borderRadius: 12, background: '#fff', border: '1px solid rgba(16,24,40,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
-                <svg width="19" height="19" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8a12 12 0 110-24c3 0 5.8 1.2 7.9 3l5.7-5.7A20 20 0 1024 44c11 0 20-9 20-20 0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8A12 12 0 0124 12c3 0 5.8 1.2 7.9 3l5.7-5.7A20 20 0 006.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0124 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 01-4.1 5.6l6.2 5.2C39.9 36 44 30.6 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+            {error && (
+              <div style={{ marginTop: 16, fontSize: 12.5, fontWeight: 600, color: '#D92D20', textAlign: 'center' }}>
+                {error}
               </div>
-              {/* GitHub */}
-              <div style={{ width: 56, height: 48, borderRadius: 12, background: '#fff', border: '1px solid rgba(16,24,40,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A1628"><path d="M12 .5A11.5 11.5 0 00.5 12a11.5 11.5 0 007.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.43-2.7 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0023.5 12 11.5 11.5 0 0012 .5z"/></svg>
-              </div>
-              {/* Facebook */}
-              <div style={{ width: 56, height: 48, borderRadius: 12, background: '#fff', border: '1px solid rgba(16,24,40,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 2px rgba(16,24,40,0.04)' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12a12 12 0 10-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.6.23 2.6.23v2.9h-1.5c-1.4 0-1.9.9-1.9 1.8V12h3.3l-.53 3.5h-2.8v8.4A12 12 0 0024 12z"/></svg>
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12.5, color: '#667085', fontWeight: 500 }}>
-              Don't have an account yet?{' '}
-              <span style={{ color: '#0A8a63', fontWeight: 700, cursor: 'pointer' }}>Register for free</span>
-            </div>
+            )}
           </div>
         </div>
       </div>
