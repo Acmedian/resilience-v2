@@ -10,16 +10,13 @@ const PAGE_BG = {
   width: '100%',
   height: 720,
   borderRadius: 26,
-  background: 'radial-gradient(760px 520px at 100% -6%,rgba(45,212,160,0.08),transparent 55%),#F4F7F9',
-  border: '1px solid rgba(16,24,40,0.05)',
-  boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 30px 60px -18px rgba(16,24,40,0.18)',
+  background: 'radial-gradient(760px 520px at 100% -6%,rgba(45,212,160,0.08),transparent 55%),#0A1628',
+  border: '1px solid rgba(255,255,255,0.06)',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.2),0 30px 60px -18px rgba(0,0,0,0.5)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
 }
-
-const inputWrapStyle = { display: 'flex', alignItems: 'center', gap: 10, height: 46, padding: '0 14px', borderRadius: 12, background: '#F9FAFB', border: '1px solid rgba(16,24,40,0.1)', marginBottom: 16 }
-const inputStyle = { flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: 14, color: '#0A1628', fontWeight: 500, fontFamily: 'inherit' }
 
 export default function Login() {
   const navigate = useNavigate()
@@ -94,13 +91,13 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),#F4F7F9', padding: '40px 24px' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),#0A1628', padding: '40px 24px' }}>
       <div style={PAGE_BG}>
         {/* dot grid */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(16,24,40,0.045) 1px,transparent 1px)', backgroundSize: '24px 24px', maskImage: 'radial-gradient(120% 100% at 50% 30%,#000,transparent 88%)', WebkitMaskImage: 'radial-gradient(120% 100% at 50% 30%,#000,transparent 88%)' }} />
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px)', backgroundSize: '24px 24px', maskImage: 'radial-gradient(120% 100% at 50% 30%,#000,transparent 88%)', WebkitMaskImage: 'radial-gradient(120% 100% at 50% 30%,#000,transparent 88%)' }} />
 
         {/* auth card */}
-        <div style={{ position: 'relative', display: 'flex', width: 940, height: 576, borderRadius: 24, overflow: 'hidden', background: '#fff', border: '1px solid rgba(16,24,40,0.06)', boxShadow: '0 1px 2px rgba(16,24,40,0.04),0 34px 64px -20px rgba(16,24,40,0.28)' }}>
+        <div style={{ position: 'relative', display: 'flex', width: 940, height: 576, borderRadius: 24, overflow: 'hidden', background: '#0F1715', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 1px 2px rgba(0,0,0,0.3),0 34px 64px -20px rgba(0,0,0,0.6)' }}>
 
           {/* LEFT — dark decorative panel */}
           <div style={{ position: 'relative', overflow: 'hidden', width: 420, flexShrink: 0, padding: '40px 38px', color: '#fff', display: 'flex', flexDirection: 'column', background: 'repeating-radial-gradient(circle at 0% 100%,rgba(45,212,160,0.05) 0 1.5px,transparent 1.5px 26px),radial-gradient(80% 70% at 8% 8%,rgba(45,212,160,0.28),transparent 55%),radial-gradient(70% 80% at 100% 100%,rgba(45,212,160,0.14),transparent 55%),#0A1628' }}>
@@ -132,81 +129,93 @@ export default function Login() {
           </div>
 
           {/* RIGHT — form */}
-          <div style={{ flex: 1, padding: '40px 44px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-0.025em', color: '#0A1628' }}>Login</div>
-            <div style={{ fontSize: 13, color: '#667085', fontWeight: 500, marginTop: 4, marginBottom: 22 }}>Choose your role to continue</div>
+          <div style={{ flex: 1, padding: '40px 44px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: '#0F1715' }}>
+            <div className="text-white font-black" style={{ fontSize: 23, letterSpacing: '-0.025em' }}>Login</div>
+            <div className="text-white/40" style={{ fontSize: 13, fontWeight: 500, marginTop: 4, marginBottom: 22 }}>Choose your role to continue</div>
 
             {/* Role tabs */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: 4, borderRadius: 12, background: 'rgba(16,24,40,0.05)', marginBottom: 22 }}>
+            <div className="bg-white/5 rounded-xl p-1 flex gap-1" style={{ marginBottom: 22 }}>
               {roles.map(r => (
-                <div key={r} onClick={() => selectRole(r)}
-                  style={{ textAlign: 'center', fontSize: 13, fontWeight: role === r ? 700 : 600, color: role === r ? '#06352a' : '#667085', padding: '9px 0', borderRadius: 9, background: role === r ? '#2DD4A0' : 'transparent', boxShadow: role === r ? '0 4px 12px -3px rgba(45,212,160,0.5)' : 'none', cursor: 'pointer', transition: 'all .15s' }}
-                >{r}</div>
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => selectRole(r)}
+                  className={
+                    role === r
+                      ? 'flex-1 text-center text-sm py-2 px-4 rounded-lg bg-mint text-ink font-bold cursor-pointer transition-all duration-200'
+                      : 'flex-1 text-center text-sm py-2 px-4 rounded-lg text-white/50 hover:text-white/80 cursor-pointer transition-all duration-200'
+                  }
+                >{r}</button>
               ))}
             </div>
 
             {role === 'Patient' ? (
               <>
-                <div style={{ fontSize: 13.5, color: '#475467', fontWeight: 500, lineHeight: 1.6, marginBottom: 22 }}>
+                <div className="text-white/50" style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.6, marginBottom: 22 }}>
                   Patients sign in securely with their Google account — no password required.
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError('Google sign-in failed. Please try again.')}
-                    theme="filled_black"
-                    shape="pill"
-                    size="large"
-                    text="signin_with"
-                    width="260"
-                  />
+                  <div className="rounded-xl overflow-hidden shadow-lg">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => setError('Google sign-in failed. Please try again.')}
+                      theme="filled_black"
+                      shape="pill"
+                      size="large"
+                      text="signin_with"
+                      width="260"
+                    />
+                  </div>
                 </div>
               </>
             ) : (
               <>
                 {/* Email */}
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475467', marginBottom: 7 }}>Email</label>
-                <div style={inputWrapStyle}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                <label className="text-white/60" style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 7 }}>Email</label>
+                <div className="relative" style={{ marginBottom: 16 }}>
+                  <svg className="absolute" style={{ left: 14, top: '50%', transform: 'translateY(-50%)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={role === 'Clinician' ? 'clinician@demo.com' : 'admin@demo.com'}
-                    style={inputStyle}
+                    className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/25 rounded-xl text-sm outline-none transition-all duration-200 focus:border-mint focus:ring-1 focus:ring-mint"
+                    style={{ padding: '12px 14px 12px 40px', fontFamily: 'inherit' }}
                   />
                 </div>
 
                 {/* Password */}
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475467', marginBottom: 7 }}>Password</label>
-                <div style={{ ...inputWrapStyle, marginBottom: 10 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+                <label className="text-white/60" style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 7 }}>Password</label>
+                <div className="relative" style={{ marginBottom: 10 }}>
+                  <svg className="absolute" style={{ left: 14, top: '50%', transform: 'translateY(-50%)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="••••••••••"
-                    style={{ ...inputStyle, letterSpacing: showPassword ? 'normal' : 2 }}
+                    className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/25 rounded-xl text-sm outline-none transition-all duration-200 focus:border-mint focus:ring-1 focus:ring-mint"
+                    style={{ padding: '12px 40px 12px 40px', letterSpacing: showPassword ? 'normal' : 2, fontFamily: 'inherit' }}
                   />
-                  <svg onClick={() => setShowPassword(s => !s)} style={{ cursor: 'pointer' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg onClick={() => setShowPassword(s => !s)} className="absolute" style={{ right: 14, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 </div>
                 <div style={{ textAlign: 'right', marginBottom: 18 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#0A8a63', cursor: 'pointer' }}>Forgot password?</span>
+                  <span className="text-mint" style={{ fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Forgot password?</span>
                 </div>
 
                 {/* Sign in */}
-                <button onClick={handleSignIn} disabled={submitting}
-                  style={{ width: '100%', height: 48, border: 'none', borderRadius: 13, background: '#2DD4A0', color: '#06352a', fontSize: 14.5, fontWeight: 800, fontFamily: 'inherit', cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1, boxShadow: '0 10px 24px -8px rgba(45,212,160,0.6)', transition: 'box-shadow .25s ease' }}
-                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 14px 30px -8px rgba(45,212,160,0.75)'}
-                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 10px 24px -8px rgba(45,212,160,0.6)'}
+                <button
+                  onClick={handleSignIn}
+                  disabled={submitting}
+                  className="btn-mint w-full"
+                  style={{ height: 48, fontSize: 14.5, opacity: submitting ? 0.7 : 1, cursor: submitting ? 'default' : 'pointer' }}
                 >{submitting ? 'Signing in…' : 'Sign in'}</button>
               </>
             )}
 
             {error && (
-              <div style={{ marginTop: 16, fontSize: 12.5, fontWeight: 600, color: '#D92D20', textAlign: 'center' }}>
+              <div className="text-red-400" style={{ marginTop: 16, fontSize: 12.5, fontWeight: 600, textAlign: 'center' }}>
                 {error}
               </div>
             )}
