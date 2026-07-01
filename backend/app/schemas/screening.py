@@ -99,3 +99,7 @@ class ResultDetailOut(BaseModel):
     result: ResultOut
     screening: ScreeningOut
     questions: List[ResultQuestionOut]
+
+
+class AssignDefaultsResponse(BaseModel):
+    created: int

@@ -176,9 +176,9 @@ def seed():
         existing_titles = {s.title for s in db.query(Screening).all()}
         screenings_by_title = {s.title: s for s in db.query(Screening).all()}
 
-        patient = db.query(User).filter(User.email == "patient@demo.com").first()
-        if not patient:
-            print("patient@demo.com not found — run seed_users first")
+        patients = db.query(User).filter(User.role == "patient").all()
+        if not patients:
+            print("No patient users found — run seed_users first")
             return
         admin = db.query(User).filter(User.role == "admin").first()
         created_by_id = admin.id if admin else None
@@ -191,84 +191,85 @@ def seed():
             screenings_by_title[data["title"]] = screening
             print(f"Created screening: {data['title']} ({len(data['questions'])} questions)")
 
-        def _assignment_exists(screening_id):
-            return (
-                db.query(PatientScreeningAssignment)
-                .filter(
-                    PatientScreeningAssignment.patient_id == patient.id,
-                    PatientScreeningAssignment.screening_id == screening_id,
-                )
-                .first()
-            )
-
         weekly = screenings_by_title["Weekly Resilience Check"]
         sleep = screenings_by_title["Sleep & Mood Journal"]
         gad7 = screenings_by_title["Anxiety Baseline (GAD-7)"]
 
         now = datetime.utcnow()
 
-        if not _assignment_exists(weekly.id):
-            db.add(
-                PatientScreeningAssignment(
-                    patient_id=patient.id,
-                    screening_id=weekly.id,
-                    assigned_at=now,
-                    due_date=now + timedelta(days=5),
-                    status="pending",
+        def _assignment_exists(patient_id, screening_id):
+            return (
+                db.query(PatientScreeningAssignment)
+                .filter(
+                    PatientScreeningAssignment.patient_id == patient_id,
+                    PatientScreeningAssignment.screening_id == screening_id,
                 )
+                .first()
             )
-            print("Assigned Weekly Resilience Check (pending, due in 5 days)")
 
-        if not _assignment_exists(sleep.id):
-            db.add(
-                PatientScreeningAssignment(
-                    patient_id=patient.id,
-                    screening_id=sleep.id,
-                    assigned_at=now,
-                    due_date=now + timedelta(days=2),
-                    status="pending",
+        for patient in patients:
+            if not _assignment_exists(patient.id, weekly.id):
+                db.add(
+                    PatientScreeningAssignment(
+                        patient_id=patient.id,
+                        screening_id=weekly.id,
+                        assigned_at=now,
+                        due_date=now + timedelta(days=5),
+                        status="pending",
+                    )
                 )
-            )
-            print("Assigned Sleep & Mood Journal (pending, due in 2 days)")
+                print(f"Assigned Weekly Resilience Check to {patient.email} (pending, due in 5 days)")
 
-        if not _assignment_exists(gad7.id):
-            gad7_questions = (
-                db.query(ScreeningQuestion)
-                .filter(ScreeningQuestion.screening_id == gad7.id)
-                .order_by(ScreeningQuestion.order_index)
-                .all()
-            )
-            # Mild anxiety profile: mostly "several days" (~4/10) with one higher spike
-            sample_values = [4, 3, 5, 4, 2, 3, 4]
-            answers = {
-                str(q.id): value for q, value in zip(gad7_questions, sample_values)
-            }
-            score = compute_screening_score(gad7_questions, answers)
+            if not _assignment_exists(patient.id, sleep.id):
+                db.add(
+                    PatientScreeningAssignment(
+                        patient_id=patient.id,
+                        screening_id=sleep.id,
+                        assigned_at=now,
+                        due_date=now + timedelta(days=2),
+                        status="pending",
+                    )
+                )
+                print(f"Assigned Sleep & Mood Journal to {patient.email} (pending, due in 2 days)")
 
-            started = now - timedelta(days=10)
-            completed = started + timedelta(minutes=5)
-            result = ScreeningResult(
-                screening_id=gad7.id,
-                patient_id=patient.id,
-                answers=answers,
-                score=score,
-                status="completed",
-                started_at=started,
-                completed_at=completed,
-                voice_mode=False,
-            )
-            db.add(result)
+            if not _assignment_exists(patient.id, gad7.id):
+                gad7_questions = (
+                    db.query(ScreeningQuestion)
+                    .filter(ScreeningQuestion.screening_id == gad7.id)
+                    .order_by(ScreeningQuestion.order_index)
+                    .all()
+                )
+                # Mild anxiety profile: mostly "several days" (~4/10) with one higher spike
+                sample_values = [4, 3, 5, 4, 2, 3, 4]
+                answers = {
+                    str(q.id): value for q, value in zip(gad7_questions, sample_values)
+                }
+                score = compute_screening_score(gad7_questions, answers)
 
-            db.add(
-                PatientScreeningAssignment(
-                    patient_id=patient.id,
+                started = now - timedelta(days=10)
+                completed = started + timedelta(minutes=5)
+                result = ScreeningResult(
                     screening_id=gad7.id,
-                    assigned_at=started - timedelta(days=1),
-                    due_date=None,
+                    patient_id=patient.id,
+                    answers=answers,
+                    score=score,
                     status="completed",
+                    started_at=started,
+                    completed_at=completed,
+                    voice_mode=False,
                 )
-            )
-            print(f"Assigned Anxiety Baseline (GAD-7) — completed, score {score}")
+                db.add(result)
+
+                db.add(
+                    PatientScreeningAssignment(
+                        patient_id=patient.id,
+                        screening_id=gad7.id,
+                        assigned_at=started - timedelta(days=1),
+                        due_date=None,
+                        status="completed",
+                    )
+                )
+                print(f"Assigned Anxiety Baseline (GAD-7) to {patient.email} — completed, score {score}")
 
         db.commit()
     finally:

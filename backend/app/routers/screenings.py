@@ -14,6 +14,7 @@ from app.models.screening import (
 )
 from app.models.user import User
 from app.schemas.screening import (
+    AssignDefaultsResponse,
     LastResultOut,
     MyScreeningItem,
     ResultDetailOut,
@@ -89,6 +90,72 @@ def my_screenings(
         )
 
     return items
+
+
+@router.post("/assign-defaults", response_model=AssignDefaultsResponse)
+def assign_defaults(
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+):
+    active_screenings = db.query(Screening).filter(Screening.is_active.is_(True)).all()
+    patients = db.query(User).filter(User.role == "patient").all()
+
+    created = 0
+    for patient in patients:
+        existing_ids = {
+            a.screening_id
+            for a in db.query(PatientScreeningAssignment)
+            .filter(PatientScreeningAssignment.patient_id == patient.id)
+            .all()
+        }
+        for screening in active_screenings:
+            if screening.id in existing_ids:
+                continue
+            db.add(
+                PatientScreeningAssignment(
+                    patient_id=patient.id,
+                    screening_id=screening.id,
+                    assigned_at=datetime.utcnow(),
+                    due_date=None,
+                    status="pending",
+                )
+            )
+            created += 1
+
+    db.commit()
+    return AssignDefaultsResponse(created=created)
+
+
+@router.post("/assign-to-me", response_model=list[ScreeningOut])
+def assign_to_me(
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("patient")),
+):
+    active_screenings = db.query(Screening).filter(Screening.is_active.is_(True)).all()
+    existing_ids = {
+        a.screening_id
+        for a in db.query(PatientScreeningAssignment)
+        .filter(PatientScreeningAssignment.patient_id == user.id)
+        .all()
+    }
+
+    newly_assigned = []
+    for screening in active_screenings:
+        if screening.id in existing_ids:
+            continue
+        db.add(
+            PatientScreeningAssignment(
+                patient_id=user.id,
+                screening_id=screening.id,
+                assigned_at=datetime.utcnow(),
+                due_date=None,
+                status="pending",
+            )
+        )
+        newly_assigned.append(screening)
+
+    db.commit()
+    return [ScreeningOut.model_validate(s) for s in newly_assigned]
 
 
 @router.get("/{screening_id}", response_model=ScreeningDetailOut)

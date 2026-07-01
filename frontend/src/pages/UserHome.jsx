@@ -35,6 +35,7 @@ export default function UserHome() {
   const { user, token } = useAuth()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [assigning, setAssigning] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -43,6 +44,17 @@ export default function UserHome() {
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [token])
+
+  async function handleGetScreenings() {
+    setAssigning(true)
+    try {
+      await api.post('/api/screenings/assign-to-me', {}, token)
+      const data = await api.get('/api/screenings/my', token)
+      if (Array.isArray(data)) setItems(data)
+    } finally {
+      setAssigning(false)
+    }
+  }
 
   const active = items
     .filter(i => i.assignment_status !== 'completed')
@@ -93,7 +105,16 @@ export default function UserHome() {
             )}
 
             {!loading && items.length === 0 && (
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>No screenings assigned yet.</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '20px 10px' }}>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 500, textAlign: 'center' }}>No screenings assigned yet.</div>
+                <button
+                  onClick={handleGetScreenings}
+                  disabled={assigning}
+                  style={{ fontSize: 12.5, fontWeight: 800, color: '#06352a', background: '#2DD4A0', padding: '10px 20px', borderRadius: 10, border: 'none', cursor: assigning ? 'default' : 'pointer', opacity: assigning ? 0.7 : 1, boxShadow: '0 6px 14px -4px rgba(45,212,160,0.6)', fontFamily: 'inherit' }}
+                >
+                  {assigning ? 'Assigning…' : 'Get your screenings'}
+                </button>
+              </div>
             )}
 
             {active.map((item, i) => {
