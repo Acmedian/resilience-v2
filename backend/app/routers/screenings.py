@@ -21,8 +21,10 @@ from app.schemas.screening import (
     ResultOut,
     ResultQuestionOut,
     ScreeningDetailOut,
+    ScreeningListItem,
     ScreeningOut,
     ScreeningQuestionOut,
+    ScreeningQuestionUpdate,
     StartScreeningRequest,
     StartScreeningResponse,
     SubmitScreeningRequest,
@@ -46,6 +48,33 @@ def _ordered_questions(screening_id: int, db: Session):
         .order_by(ScreeningQuestion.order_index)
         .all()
     )
+
+
+@router.get("", response_model=list[ScreeningListItem])
+def list_screenings(
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+):
+    screenings = db.query(Screening).order_by(Screening.created_at.desc()).all()
+    items = []
+    for screening in screenings:
+        question_count = (
+            db.query(ScreeningQuestion)
+            .filter(ScreeningQuestion.screening_id == screening.id)
+            .count()
+        )
+        items.append(
+            ScreeningListItem(
+                id=screening.id,
+                title=screening.title,
+                type=screening.type,
+                estimated_minutes=screening.estimated_minutes,
+                is_active=screening.is_active,
+                created_at=screening.created_at,
+                question_count=question_count,
+            )
+        )
+    return items
 
 
 @router.get("/my", response_model=list[MyScreeningItem])
@@ -317,3 +346,45 @@ def get_result(
         screening=ScreeningOut.model_validate(screening),
         questions=question_items,
     )
+
+
+@router.put("/{screening_id}/questions/{question_id}", response_model=ScreeningQuestionOut)
+def update_screening_question(
+    screening_id: int,
+    question_id: int,
+    payload: ScreeningQuestionUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+):
+    question = (
+        db.query(ScreeningQuestion)
+        .filter(ScreeningQuestion.id == question_id, ScreeningQuestion.screening_id == screening_id)
+        .first()
+    )
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    for field, value in payload.model_dump(exclude_none=True).items():
+        setattr(question, field, value)
+    db.commit()
+    db.refresh(question)
+    return question
+
+
+@router.delete("/{screening_id}/questions/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_screening_question(
+    screening_id: int,
+    question_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+):
+    question = (
+        db.query(ScreeningQuestion)
+        .filter(ScreeningQuestion.id == question_id, ScreeningQuestion.screening_id == screening_id)
+        .first()
+    )
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    db.delete(question)
+    db.commit()

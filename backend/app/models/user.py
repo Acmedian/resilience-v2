@@ -21,3 +21,4 @@ class User(Base):
     is_active = Column(Boolean, nullable=False, default=True)
     picture_url = Column(String(1024), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)

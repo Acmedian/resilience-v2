@@ -27,6 +27,8 @@ class UserResponse(BaseModel):
     picture_url: Optional[str] = None
     cohort_id: Optional[int] = None
     created_at: datetime
+    last_login: Optional[datetime] = None
+    is_active: bool = True
 
     class Config:
         from_attributes = True

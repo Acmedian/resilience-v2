@@ -33,7 +33,27 @@ class QuestionResponse(BaseModel):
         from_attributes = True
 
 
-class GenerateQuestionsRequest(BaseModel):
+class GenerateScreeningQuestionsRequest(BaseModel):
     topic: str
+    question_type: Optional[str] = None  # mcq | rating | fill | truefalse
     count: int = 5
-    type: str = "multiple_choice"
+    screening_id: Optional[int] = None
+
+
+class GeneratedQuestionOut(BaseModel):
+    text: str
+    type: str
+    options: Optional[List[str]] = None
+    suggested_answer: Optional[str] = None
+
+
+class ApprovedQuestionIn(BaseModel):
+    text: str
+    type: str
+    options: Optional[List[str]] = None
+    suggested_answer: Optional[str] = None
+
+
+class ApproveQuestionsRequest(BaseModel):
+    screening_id: int
+    questions: List[ApprovedQuestionIn]

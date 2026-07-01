@@ -1,6 +1,15 @@
+import { useNavigate, useLocation } from 'react-router-dom'
+
 const NAV_ITEMS = ['Overview', 'Cohorts', 'Surveys', 'Reports']
+const ROUTE_ITEMS = [
+  { label: 'Screenings', path: '/admin/screenings' },
+  { label: 'Users', path: '/admin/users' },
+]
 
 export default function Topbar({ activeNav, onNavChange }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+
   return (
     <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 66, padding: '0 32px', background: 'rgba(250,251,252,0.72)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderBottom: '1px solid rgba(16,24,40,0.06)' }}>
 
@@ -16,28 +25,57 @@ export default function Topbar({ activeNav, onNavChange }) {
 
         {/* Nav items */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          {NAV_ITEMS.map(item => (
-            <button
-              key={item}
-              onClick={() => onNavChange?.(item)}
-              style={{
-                fontSize: 13.5,
-                fontWeight: activeNav === item ? 600 : 500,
-                color: activeNav === item ? '#0A1628' : '#667085',
-                padding: '7px 13px',
-                borderRadius: 9,
-                background: activeNav === item ? 'rgba(16,24,40,0.05)' : 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'background .15s,color .15s',
-              }}
-              onMouseEnter={e => { if (activeNav !== item) { e.currentTarget.style.background = 'rgba(16,24,40,0.04)'; e.currentTarget.style.color = '#0A1628' } }}
-              onMouseLeave={e => { if (activeNav !== item) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#667085' } }}
-            >
-              {item}
-            </button>
-          ))}
+          {NAV_ITEMS.map(item => {
+            const isActive = item === 'Overview' ? location.pathname === '/admin' : activeNav === item
+            return (
+              <button
+                key={item}
+                onClick={() => { if (item === 'Overview') navigate('/admin'); onNavChange?.(item) }}
+                style={{
+                  fontSize: 13.5,
+                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? '#0A1628' : '#667085',
+                  padding: '7px 13px',
+                  borderRadius: 9,
+                  background: isActive ? 'rgba(16,24,40,0.05)' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'background .15s,color .15s',
+                }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(16,24,40,0.04)'; e.currentTarget.style.color = '#0A1628' } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#667085' } }}
+              >
+                {item}
+              </button>
+            )
+          })}
+          <span style={{ width: 1, height: 18, background: 'rgba(16,24,40,0.1)', margin: '0 4px' }} />
+          {ROUTE_ITEMS.map(item => {
+            const isActive = location.pathname === item.path
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                style={{
+                  fontSize: 13.5,
+                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? '#0A1628' : '#667085',
+                  padding: '7px 13px',
+                  borderRadius: 9,
+                  background: isActive ? 'rgba(16,24,40,0.05)' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'background .15s,color .15s',
+                }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(16,24,40,0.04)'; e.currentTarget.style.color = '#0A1628' } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#667085' } }}
+              >
+                {item.label}
+              </button>
+            )
+          })}
         </div>
       </div>
 

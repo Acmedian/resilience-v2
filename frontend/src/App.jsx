@@ -9,7 +9,8 @@ import UserHome from './pages/UserHome'
 import VoiceScreening from './pages/VoiceScreening'
 import ScreeningComplete from './pages/ScreeningComplete'
 import MedicalScribe from './pages/MedicalScribe'
-import AdminQuestions from './pages/AdminQuestions'
+import ScreeningBuilder from './pages/ScreeningBuilder'
+import AdminUsers from './pages/AdminUsers'
 import PatientList from './pages/PatientList'
 import PatientDetail from './pages/PatientDetail'
 
@@ -52,7 +53,8 @@ function AnimatedRoutes() {
           <Route path="/clinician/scribe/:sessionId" element={<RoleRoute allowedRoles={['clinician']}><MedicalScribe /></RoleRoute>} />
 
           <Route path="/admin" element={<RoleRoute allowedRoles={['admin']}><AdminDashboard /></RoleRoute>} />
-          <Route path="/admin/screenings" element={<RoleRoute allowedRoles={['admin']}><AdminQuestions /></RoleRoute>} />
+          <Route path="/admin/screenings" element={<RoleRoute allowedRoles={['admin']}><ScreeningBuilder /></RoleRoute>} />
+          <Route path="/admin/users" element={<RoleRoute allowedRoles={['admin']}><AdminUsers /></RoleRoute>} />
         </Route>
       </Routes>
     </AnimatePresence>

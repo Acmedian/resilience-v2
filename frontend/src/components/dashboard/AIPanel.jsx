@@ -1,12 +1,29 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { api } from '../../lib/api'
 
-export default function AIPanel({ collapsed, onToggle }) {
+export default function AIPanel({ collapsed, onToggle, token }) {
   const [input, setInput] = useState('')
+  const [messages, setMessages] = useState([])
+  const [asking, setAsking] = useState(false)
+
+  async function ask(question) {
+    if (!question.trim() || asking) return
+    setInput('')
+    setMessages(prev => [...prev, { role: 'user', text: question }])
+    setAsking(true)
+    try {
+      const data = await api.post('/api/admin/stats', { question }, token)
+      setMessages(prev => [...prev, { role: 'ai', text: data?.answer || 'Sorry, I could not find an answer to that.' }])
+    } catch {
+      setMessages(prev => [...prev, { role: 'ai', text: 'Something went wrong reaching the assistant. Please try again.' }])
+    } finally {
+      setAsking(false)
+    }
+  }
 
   function handleSend() {
-    if (!input.trim()) return
-    setInput('')
+    ask(input)
   }
 
   /* ── Collapsed rail — dark, 56px wide ── */
@@ -121,14 +138,38 @@ export default function AIPanel({ collapsed, onToggle }) {
 
         {/* suggestion chips */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 2, paddingLeft: 35 }}>
-          {['Why is CBT improving?', 'Show high-risk patients'].map(chip => (
+          {['How many high risk patients?', 'Which cohort is leading?', 'What is our participation rate?'].map(chip => (
             <span key={chip}
+              onClick={() => ask(chip)}
               style={{ fontSize: 11.5, fontWeight: 600, color: '#475467', background: '#fff', border: '1px solid rgba(16,24,40,0.1)', padding: '6px 11px', borderRadius: 20, cursor: 'pointer', transition: 'border-color .15s,color .15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#2DD4A0'; e.currentTarget.style.color = '#0A8a63' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(16,24,40,0.1)'; e.currentTarget.style.color = '#475467' }}
             >{chip}</span>
           ))}
         </div>
+
+        {/* live Q&A */}
+        {messages.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }}>
+            {messages.map((m, i) => m.role === 'user' ? (
+              <div key={i} style={{ alignSelf: 'flex-end', maxWidth: '84%', background: '#0A1628', color: '#fff', padding: '12px 15px', borderRadius: '16px 16px 5px 16px', fontSize: 13, lineHeight: 1.5, fontWeight: 500, boxShadow: '0 6px 14px -4px rgba(10,22,40,0.35)' }}>
+                {m.text}
+              </div>
+            ) : (
+              <div key={i} style={{ alignSelf: 'flex-start', maxWidth: '90%', display: 'flex', gap: 9 }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                  <div style={{ width: 8, height: 8, background: '#2DD4A0', transform: 'rotate(45deg)', borderRadius: 1 }}/>
+                </div>
+                <div style={{ background: 'rgba(16,24,40,0.045)', padding: '13px 15px', borderRadius: '16px 16px 16px 5px', fontSize: 13, lineHeight: 1.55, color: '#0A1628' }}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {asking && (
+              <div style={{ alignSelf: 'flex-start', fontSize: 12, color: '#98A2B3', fontWeight: 600, paddingLeft: 35 }}>Thinking…</div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Input */}

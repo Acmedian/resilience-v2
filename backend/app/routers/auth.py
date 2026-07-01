@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -62,6 +64,9 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
 
+    user.last_login = datetime.utcnow()
+    db.commit()
+
     return _issue_token(user)
 
 
@@ -83,6 +88,9 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
         )
+
+    user.last_login = datetime.utcnow()
+    db.commit()
 
     return _issue_token(user)
 

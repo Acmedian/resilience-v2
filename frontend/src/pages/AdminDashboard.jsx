@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Topbar from '../components/layout/Topbar'
 import AIPanel from '../components/dashboard/AIPanel'
+import { useAuth } from '../contexts/AuthContext'
+import { api } from '../lib/api'
 
 /* ── Card background helpers ────────────────────────────────────────────────
  * The 4 small cards sit in a 2×2 grid. Each card's radial glow faces INWARD
@@ -56,8 +58,8 @@ const SMALL_CARD_BASE = {
 const HOVER_IN  = { transform: 'translateY(-4px)', boxShadow: '0 2px 6px rgba(10,22,40,0.22),0 30px 52px -12px rgba(10,22,40,0.55)' }
 const HOVER_OUT = { transform: '', boxShadow: SMALL_CARD_BASE.boxShadow }
 
-/* scale 50-90 → 0-100% */
-const toBarPct = score => ((score - 50) / 40) * 100
+/* scale 50-90 → 0-100%, clamped since real scores can fall outside this band */
+const toBarPct = score => Math.max(0, Math.min(100, ((score - 50) / 40) * 100))
 
 /* ── Animated cohort bar ─────────────────────────────────────────────────── */
 function CohortBar({ score, barGradient, sheenDelay, growDuration, tipColor, tipShadow }) {
@@ -81,18 +83,19 @@ function CohortBar({ score, barGradient, sheenDelay, growDuration, tipColor, tip
   )
 }
 
-const COHORTS = [
-  { num: 1, initials: 'CB', name: 'CBT Program',       sub: '82 patients',  score: 78.6, trend: '8.2', isLeading: true,
+/* Decorative styling per cohort row position — real data (name/count/score/trend) is fetched from the API */
+const COHORT_STYLES = [
+  { initials: 'CB',
     avatarBg: 'rgba(45,212,160,0.16)', avatarColor: '#2DD4A0', avatarBorder: '1px solid rgba(45,212,160,0.3)', avatarGlow: '0 0 18px rgba(45,212,160,0.35)',
     badgeBg: '#2DD4A0', badgeColor: '#06352a',
     barGradient: 'linear-gradient(90deg,rgba(45,212,160,0.14),rgba(45,212,160,0.42) 55%,rgba(45,212,160,0.9))',
     tipColor: '#EAFFF7', tipShadow: '0 0 14px 3px rgba(45,212,160,0.9)', sheenDelay: '0s', growDuration: '1.1s' },
-  { num: 2, initials: 'MG', name: 'Mindfulness Group', sub: '64 patients',  score: 74.1, trend: '3.1', isLeading: false,
+  { initials: 'MG',
     avatarBg: 'rgba(255,255,255,0.06)', avatarColor: 'rgba(255,255,255,0.8)', avatarBorder: '1px solid rgba(255,255,255,0.08)', avatarGlow: 'none',
     badgeBg: '#1a2942', badgeColor: 'rgba(255,255,255,0.7)',
     barGradient: 'linear-gradient(90deg,rgba(45,212,160,0.1),rgba(45,212,160,0.32) 60%,rgba(45,212,160,0.7))',
     tipColor: '#CFFCEC', tipShadow: '0 0 12px 2px rgba(45,212,160,0.7)', sheenDelay: '0.6s', growDuration: '1.2s' },
-  { num: 3, initials: 'SG', name: 'Self-Guided',       sub: '102 patients', score: 71.2, trend: '1.8', isLeading: false,
+  { initials: 'SG',
     avatarBg: 'rgba(255,255,255,0.06)', avatarColor: 'rgba(255,255,255,0.8)', avatarBorder: '1px solid rgba(255,255,255,0.08)', avatarGlow: 'none',
     badgeBg: '#1a2942', badgeColor: 'rgba(255,255,255,0.7)',
     barGradient: 'linear-gradient(90deg,rgba(45,212,160,0.08),rgba(45,212,160,0.26) 60%,rgba(45,212,160,0.58))',
@@ -102,9 +105,35 @@ const COHORTS = [
 const PERIODS = ['Week', 'Month', 'Quarter']
 
 export default function AdminDashboard() {
+  const { token } = useAuth()
   const [period,      setPeriod]      = useState('Week')
   const [aiCollapsed, setAiCollapsed] = useState(false)
   const [activeNav,   setActiveNav]   = useState('Overview')
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    api.get('/api/admin/stats', token)
+      .then(data => { if (!cancelled && data && !data.detail) setStats(data) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [token])
+
+  const cohortRows = COHORT_STYLES.map((style, i) => {
+    const c = stats?.cohort_breakdown?.[i]
+    const avgScore = c?.avg_score ?? 0
+    const isLeading = stats?.cohort_breakdown && c &&
+      c.avg_score === Math.max(...stats.cohort_breakdown.map(x => x.avg_score)) && c.avg_score > 0
+    return {
+      ...style,
+      name: c?.cohort_name || '—',
+      sub: c ? `${c.patient_count} patients` : '—',
+      score: avgScore,
+      trend: c?.week_over_week_change ?? 0,
+      isLeading,
+    }
+  })
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),radial-gradient(820px 600px at -12% 112%,rgba(10,22,40,0.05),transparent 55%),#F4F7F9', color: '#0A1628' }}>
@@ -168,17 +197,25 @@ export default function AdminDashboard() {
               <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.66)', letterSpacing: '0.01em' }}>Avg Resilience Score</span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#2DD4A0', background: 'rgba(45,212,160,0.14)', padding: '5px 9px', borderRadius: 8, fontVariantNumeric: 'tabular-nums' }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 15l7-7 7 7"/></svg>
-                    +2.3
-                  </span>
+                  {stats?.avg_resilience_score_change != null && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: stats.avg_resilience_score_change >= 0 ? '#2DD4A0' : '#FF6B5E', background: stats.avg_resilience_score_change >= 0 ? 'rgba(45,212,160,0.14)' : 'rgba(240,68,56,0.14)', padding: '5px 9px', borderRadius: 8, fontVariantNumeric: 'tabular-nums' }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ transform: stats.avg_resilience_score_change < 0 ? 'rotate(180deg)' : 'none' }}><path d="M5 15l7-7 7 7"/></svg>
+                      {stats.avg_resilience_score_change >= 0 ? '+' : ''}{stats.avg_resilience_score_change}
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 18 }}>
-                  <span style={{ fontSize: 84, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 0.9, fontVariantNumeric: 'tabular-nums' }}>73.4</span>
-                  <span style={{ fontSize: 22, fontWeight: 700, color: 'rgba(255,255,255,0.42)', letterSpacing: '-0.02em' }}>/100</span>
+                  {loading ? (
+                    <div className="shimmer-loading" style={{ width: 140, height: 72 }} />
+                  ) : (
+                    <>
+                      <span style={{ fontSize: 84, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 0.9, fontVariantNumeric: 'tabular-nums' }}>{stats?.avg_resilience_score ?? 0}</span>
+                      <span style={{ fontSize: 22, fontWeight: 700, color: 'rgba(255,255,255,0.42)', letterSpacing: '-0.02em' }}>/100</span>
+                    </>
+                  )}
                 </div>
                 <span style={{ marginTop: 12, fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 500, maxWidth: 240 }}>
-                  Practice-wide composite across 9 resilience dimensions, up from 71.1 last week.
+                  Practice-wide composite across {stats?.screenings_completed ?? 0} completed screenings.
                 </span>
                 {/* sparkline */}
                 <div style={{ marginTop: 'auto', paddingTop: 26 }}>
@@ -209,13 +246,14 @@ export default function AdminDashboard() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
                 <span style={{ fontSize: 12.5, fontWeight: 600 }}>Active Patients</span>
               </div>
-              <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#fff' }}>248</div>
+              {loading ? (
+                <div className="shimmer-loading" style={{ width: 80, height: 42 }} />
+              ) : (
+                <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#fff' }}>{stats?.active_patients ?? 0}</div>
+              )}
               <div style={{ display: 'flex', gap: 14, marginTop: 14, fontSize: 12, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                <span style={{ color: '#2DD4A0', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2DD4A0', flexShrink: 0 }}/>12 new
-                </span>
                 <span style={{ color: 'rgba(255,255,255,0.5)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }}/>34 inactive
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2DD4A0', flexShrink: 0 }}/>{stats?.total_patients ?? 0} on clinical roster
                 </span>
               </div>
             </div>
@@ -227,9 +265,13 @@ export default function AdminDashboard() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.66)', marginBottom: 14 }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-                <span style={{ fontSize: 12.5, fontWeight: 600 }}>Surveys Completed</span>
+                <span style={{ fontSize: 12.5, fontWeight: 600 }}>Screenings Completed</span>
               </div>
-              <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#fff' }}>1,847</div>
+              {loading ? (
+                <div className="shimmer-loading" style={{ width: 80, height: 42 }} />
+              ) : (
+                <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#fff' }}>{stats?.screenings_completed ?? 0}</div>
+              )}
               <svg width="100%" height="30" viewBox="0 0 120 30" preserveAspectRatio="none" style={{ display: 'block', marginTop: 14 }}>
                 <defs>
                   <linearGradient id="surveyFill" x1="0" y1="0" x2="0" y2="1">
@@ -253,11 +295,15 @@ export default function AdminDashboard() {
                 <span style={{ fontSize: 12.5, fontWeight: 600 }}>High Risk Flags</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                <span style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: '#FF6B5E', fontVariantNumeric: 'tabular-nums' }}>14</span>
+                {loading ? (
+                  <div className="shimmer-loading" style={{ width: 60, height: 42 }} />
+                ) : (
+                  <span style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: '#FF6B5E', fontVariantNumeric: 'tabular-nums' }}>{stats?.high_risk_flags ?? 0}</span>
+                )}
               </div>
               <div style={{ marginTop: 14 }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#F04438', background: 'rgba(240,68,56,0.10)', padding: '5px 9px', borderRadius: 8 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F04438', flexShrink: 0 }}/>3 critical — needs review
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F04438', flexShrink: 0 }}/>Requires clinical review
                 </span>
               </div>
             </div>
@@ -275,12 +321,12 @@ export default function AdminDashboard() {
                 <div style={{ position: 'relative', width: 66, height: 66, flexShrink: 0 }}>
                   <svg width="66" height="66" viewBox="0 0 66 66">
                     <circle cx="33" cy="33" r="28" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="7"/>
-                    <circle cx="33" cy="33" r="28" fill="none" stroke="#2DD4A0" strokeWidth="7" strokeLinecap="round" strokeDasharray="175.9" strokeDashoffset="15.5" transform="rotate(-90 33 33)"/>
+                    <circle cx="33" cy="33" r="28" fill="none" stroke="#2DD4A0" strokeWidth="7" strokeLinecap="round" strokeDasharray="175.93" strokeDashoffset={175.93 * (1 - (stats?.screening_participation ?? 0) / 100)} transform="rotate(-90 33 33)"/>
                   </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#fff' }}>91.2<span style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)' }}>%</span></div>
-                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginTop: 5 }}>226 of 248 responded</div>
+                  <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#fff' }}>{stats?.screening_participation ?? 0}<span style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)' }}>%</span></div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginTop: 5 }}>{stats?.assignments_completed ?? 0} of {stats?.assignments_total ?? 0} responded</div>
                 </div>
               </div>
             </div>
@@ -306,13 +352,13 @@ export default function AdminDashboard() {
 
               {/* Cohort rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {COHORTS.map(c => (
+                {cohortRows.map((c, i) => (
                   <div key={c.name} style={{ display: 'grid', gridTemplateColumns: '200px 1fr 96px', alignItems: 'center', gap: 22 }}>
                     {/* Avatar + name */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ position: 'relative', width: 42, height: 42, borderRadius: 12, background: c.avatarBg, color: c.avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, border: c.avatarBorder, boxShadow: c.avatarGlow, flexShrink: 0 }}>
                         {c.initials}
-                        <span style={{ position: 'absolute', top: -7, right: -7, width: 19, height: 19, borderRadius: '50%', background: c.badgeBg, color: c.badgeColor, fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #0A1628' }}>{c.num}</span>
+                        <span style={{ position: 'absolute', top: -7, right: -7, width: 19, height: 19, borderRadius: '50%', background: c.badgeBg, color: c.badgeColor, fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #0A1628' }}>{i + 1}</span>
                       </div>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: '-0.01em' }}>{c.name}</div>
@@ -326,7 +372,7 @@ export default function AdminDashboard() {
                     <CohortBar score={c.score} barGradient={c.barGradient} tipColor={c.tipColor} tipShadow={c.tipShadow} sheenDelay={c.sheenDelay} growDuration={c.growDuration} />
                     {/* Trend */}
                     <div style={{ justifySelf: 'end', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 800, color: '#2DD4A0', fontVariantNumeric: 'tabular-nums' }}>▲ {c.trend}</div>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 800, color: c.trend >= 0 ? '#2DD4A0' : '#FF6B5E', fontVariantNumeric: 'tabular-nums' }}>{c.trend >= 0 ? '▲' : '▼'} {Math.abs(c.trend)}</div>
                       <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginTop: 2 }}>vs last wk</div>
                     </div>
                   </div>
@@ -351,7 +397,7 @@ export default function AdminDashboard() {
           </div>{/* end grid */}
 
           {/* ── AI Panel ── */}
-          <AIPanel collapsed={aiCollapsed} onToggle={() => setAiCollapsed(v => !v)} />
+          <AIPanel collapsed={aiCollapsed} onToggle={() => setAiCollapsed(v => !v)} token={token} />
 
         </div>{/* end main flex */}
       </div>

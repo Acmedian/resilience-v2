@@ -18,6 +18,16 @@ class ScreeningOut(BaseModel):
         from_attributes = True
 
 
+class ScreeningListItem(BaseModel):
+    id: int
+    title: str
+    type: str
+    estimated_minutes: int
+    is_active: bool
+    created_at: datetime
+    question_count: int
+
+
 class ScreeningQuestionOut(BaseModel):
     id: int
     text: str
@@ -28,6 +38,13 @@ class ScreeningQuestionOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ScreeningQuestionUpdate(BaseModel):
+    text: Optional[str] = None
+    options: Optional[List[Any]] = None
+    correct_answer: Optional[str] = None
+    is_required: Optional[bool] = None
 
 
 class LastResultOut(BaseModel):
