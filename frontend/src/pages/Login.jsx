@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../lib/api'
+import { useToast } from '../components/ui/ToastContext'
 
 const PAGE_BG = {
   position: 'relative',
@@ -21,6 +22,7 @@ const PAGE_BG = {
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const showToast = useToast()
   const [role, setRole] = useState('Patient')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,13 +48,17 @@ export default function Login() {
     try {
       const data = await api.post('/api/auth/google', { id_token: credentialResponse.credential })
       if (!data || !data.access_token) {
-        setError(data?.detail || 'Google sign-in failed. Please try again.')
+        const message = data?.detail || 'Google sign-in failed. Please try again.'
+        setError(message)
+        showToast(message, 'error')
         return
       }
       login(data.access_token, data.user)
+      showToast(`Welcome back, ${data.user.name.split(' ')[0]}!`, 'success')
       goToRoleHome(data.user.role)
     } catch {
       setError('Google sign-in failed. Please try again.')
+      showToast('Google sign-in failed. Please try again.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -74,13 +80,17 @@ export default function Login() {
     try {
       const data = await api.post('/api/auth/login', { email, password })
       if (!data || !data.access_token) {
-        setError(data?.detail || 'Invalid credentials.')
+        const message = data?.detail || 'Invalid credentials.'
+        setError(message)
+        showToast(message, 'error')
         return
       }
       login(data.access_token, data.user)
+      showToast(`Welcome back, ${data.user.name.split(' ')[0]}!`, 'success')
       goToRoleHome(data.user.role)
     } catch {
       setError('Unable to reach the server. Please try again.')
+      showToast('Unable to reach the server. Please try again.', 'error')
     } finally {
       setSubmitting(false)
     }

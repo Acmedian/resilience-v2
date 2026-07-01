@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
+import { useToast } from '../ui/ToastContext'
 
 const GENDERS = [
   { value: 'male', label: 'Male' },
@@ -16,6 +17,7 @@ const labelClass = "text-xs font-semibold mb-1.5 block"
 
 export default function AddPatientModal({ onClose, onCreated, patient }) {
   const { token } = useAuth()
+  const showToast = useToast()
   const isEdit = Boolean(patient)
   const [form, setForm] = useState({
     name: patient?.name || '',
@@ -54,12 +56,16 @@ export default function AddPatientModal({ onClose, onCreated, patient }) {
         ? await api.put(`/api/patients/${patient.id}`, payload, token)
         : await api.post('/api/patients', payload, token)
       if (!data || !data.id) {
-        setError(data?.detail || `Could not ${isEdit ? 'update' : 'add'} patient. Please try again.`)
+        const message = data?.detail || `Could not ${isEdit ? 'update' : 'add'} patient. Please try again.`
+        setError(message)
+        showToast(message, 'error')
         return
       }
+      showToast(isEdit ? 'Patient updated' : 'Patient added', 'success')
       onCreated(data)
     } catch {
       setError('Unable to reach the server. Please try again.')
+      showToast('Unable to reach the server. Please try again.', 'error')
     } finally {
       setSubmitting(false)
     }

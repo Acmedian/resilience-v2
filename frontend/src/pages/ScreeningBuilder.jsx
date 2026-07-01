@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../lib/api'
+import { useToast } from '../components/ui/ToastContext'
 
 const QUESTION_TYPES = [
   { value: '', label: 'Mixed types' },
@@ -82,6 +83,7 @@ function EditQuestionModal({ question, onClose, onSaved, token }) {
 export default function ScreeningBuilder() {
   const { token } = useAuth()
   const navigate = useNavigate()
+  const showToast = useToast()
 
   const [topic, setTopic] = useState('')
   const [questionType, setQuestionType] = useState('')
@@ -147,6 +149,7 @@ export default function ScreeningBuilder() {
       questions: [q],
     }, token)
     setApprovedIndices(prev => new Set([...prev, index]))
+    showToast('Question approved', 'success')
     loadBank()
   }
 
@@ -161,11 +164,13 @@ export default function ScreeningBuilder() {
       questions: remaining.map(r => r.q),
     }, token)
     setApprovedIndices(prev => new Set([...prev, ...remaining.map(r => r.i)]))
+    showToast(`${remaining.length} question${remaining.length === 1 ? '' : 's'} approved`, 'success')
     loadBank()
   }
 
   function discardOne(index) {
     setDiscardedIndices(prev => new Set([...prev, index]))
+    showToast('Question discarded', 'info')
   }
 
   async function handleDelete(question) {

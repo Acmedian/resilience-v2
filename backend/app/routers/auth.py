@@ -1,10 +1,11 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.limiter import limiter
 from app.core.security import (
     create_access_token,
     verify_google_token,
@@ -35,7 +36,8 @@ def _issue_token(user: User) -> Token:
 
 
 @router.post("/google", response_model=Token)
-def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def google_auth(request: Request, payload: GoogleAuthRequest, db: Session = Depends(get_db)):
     google_data = verify_google_token(payload.id_token)
 
     email = google_data.get("email")
@@ -71,7 +73,8 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not user.hashed_password:
         raise HTTPException(

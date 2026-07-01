@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../lib/api'
+import { useToast } from '../components/ui/ToastContext'
 
 const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition
 
@@ -33,6 +34,7 @@ export default function MedicalScribe() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { token } = useAuth()
+  const showToast = useToast()
 
   const isNew = sessionId === 'new'
   const patientIdFromQuery = searchParams.get('patientId')
@@ -177,8 +179,10 @@ export default function MedicalScribe() {
       const data = await api.post(`/api/scribe/sessions/${realSessionId}/summarise`, {}, token)
       setSummary(data.summary)
       setUiState('completed')
+      showToast('Session saved', 'success')
     } catch {
       setError('Could not generate summary. Please try again.')
+      showToast('Could not generate summary. Please try again.', 'error')
       setUiState('recording')
     }
   }
@@ -203,6 +207,7 @@ export default function MedicalScribe() {
   }
 
   function handleApprove() {
+    showToast('Session approved', 'success')
     navigate(`/clinician/patients/${patientId}`)
   }
 

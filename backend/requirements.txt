@@ -13,3 +13,4 @@ pydantic[email]==2.7.1
 pydantic-settings==2.2.1
 google-auth==2.29.0
 google-auth-oauthlib==1.2.0
+slowapi==0.1.10

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../lib/api'
+import { useToast } from '../components/ui/ToastContext'
 import ScreeningProgress from '../components/screening/ScreeningProgress'
 import VoiceOrb from '../components/screening/VoiceOrb'
 import QuestionRenderer from '../components/screening/QuestionRenderer'
@@ -105,6 +106,7 @@ export default function VoiceScreening() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { token } = useAuth()
+  const showToast = useToast()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -284,6 +286,7 @@ export default function VoiceScreening() {
         { result_id: resultId, answers: finalAnswers, voice_mode: mode === 'voice' },
         token
       )
+      showToast('Screening submitted', 'success')
       navigate(`/screening/${id}/complete`, {
         replace: true,
         state: {
@@ -294,6 +297,7 @@ export default function VoiceScreening() {
       })
     } catch {
       setError('Could not submit your screening. Please try again.')
+      showToast('Could not submit your screening. Please try again.', 'error')
       setSubmitting(false)
     }
   }

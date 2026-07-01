@@ -13,6 +13,7 @@ import ScreeningBuilder from './pages/ScreeningBuilder'
 import AdminUsers from './pages/AdminUsers'
 import PatientList from './pages/PatientList'
 import PatientDetail from './pages/PatientDetail'
+import NotFound from './pages/NotFound'
 
 const ROLE_HOME = {
   patient: '/home',
@@ -56,6 +57,8 @@ function AnimatedRoutes() {
           <Route path="/admin/screenings" element={<RoleRoute allowedRoles={['admin']}><ScreeningBuilder /></RoleRoute>} />
           <Route path="/admin/users" element={<RoleRoute allowedRoles={['admin']}><AdminUsers /></RoleRoute>} />
         </Route>
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
   )
