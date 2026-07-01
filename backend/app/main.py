@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import Base, engine
-from app.routers import admin, auth, questions, results, screenings, scribe, surveys, users
+from app.routers import admin, auth, patients, questions, results, screenings, scribe, surveys, users
 
 # Create tables on startup (dev convenience; use Alembic in production)
 Base.metadata.create_all(bind=engine)
@@ -29,6 +29,7 @@ app.include_router(results.router, prefix="/api")
 app.include_router(scribe.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(screenings.router, prefix="/api")
+app.include_router(patients.router, prefix="/api")
 
 
 @app.get("/health")

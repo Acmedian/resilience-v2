@@ -11,6 +11,7 @@ import ScreeningComplete from './pages/ScreeningComplete'
 import MedicalScribe from './pages/MedicalScribe'
 import AdminQuestions from './pages/AdminQuestions'
 import PatientList from './pages/PatientList'
+import PatientDetail from './pages/PatientDetail'
 
 const ROLE_HOME = {
   patient: '/home',
@@ -47,6 +48,7 @@ function AnimatedRoutes() {
           <Route path="/screening/:id/complete" element={<RoleRoute allowedRoles={['patient']}><ScreeningComplete /></RoleRoute>} />
 
           <Route path="/clinician/patients" element={<RoleRoute allowedRoles={['clinician']}><PatientList /></RoleRoute>} />
+          <Route path="/clinician/patients/:id" element={<RoleRoute allowedRoles={['clinician']}><PatientDetail /></RoleRoute>} />
           <Route path="/clinician/scribe/:sessionId" element={<RoleRoute allowedRoles={['clinician']}><MedicalScribe /></RoleRoute>} />
 
           <Route path="/admin" element={<RoleRoute allowedRoles={['admin']}><AdminDashboard /></RoleRoute>} />

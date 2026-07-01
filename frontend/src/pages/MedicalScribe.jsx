@@ -1,120 +1,353 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { api } from '../lib/api'
 
-const TRANSCRIPT = [
-  { speaker: 'Dr. Reed', isClinician: true, time: '00:12', text: 'How have things been since we adjusted your sleep routine last week?' },
-  { speaker: 'Patient', isClinician: false, time: '00:21', text: "Honestly a lot better. I'm falling asleep faster, and I only woke up once or twice this week instead of every night." },
-  { speaker: 'Dr. Reed', isClinician: true, time: '00:39', text: "That's great progress. And how about your stress levels during the workday?" },
-  { speaker: 'Patient', isClinician: false, time: '00:48', text: 'Still tough around deadlines, but the breathing exercise actually helps me reset', cursor: true },
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition
+
+const SUMMARY_FIELDS = [
+  { key: 'chief_complaint', label: 'Chief Complaint' },
+  { key: 'progress', label: 'Progress Since Last Session' },
+  { key: 'medication_response', label: 'Medication Response' },
+  { key: 'mental_state', label: 'Mental State Assessment' },
+  { key: 'recommended_followup', label: 'Recommended Follow-up' },
+  { key: 'session_notes', label: 'Session Notes' },
 ]
 
-const INDICATORS = [
-  { label: 'Sleep quality', value: 'Improved ▲', color: '#2DD4A0' },
-  { label: 'Daytime stress', value: 'Moderate', color: '#F5B544' },
-  { label: 'Coping strategy use', value: 'Consistent', color: '#2DD4A0' },
-]
+function formatTimer(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0')
+  const s = Math.floor(seconds % 60).toString().padStart(2, '0')
+  return `${m}:${s}`
+}
+
+function formatClock(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  } catch {
+    return ''
+  }
+}
 
 export default function MedicalScribe() {
-  const [timer] = useState('12:47')
+  const { sessionId } = useParams()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { token } = useAuth()
+
+  const isNew = sessionId === 'new'
+  const patientIdFromQuery = searchParams.get('patientId')
+
+  const [uiState, setUiState] = useState('idle') // idle | recording | processing | completed
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [realSessionId, setRealSessionId] = useState(isNew ? null : Number(sessionId))
+  const [patientId, setPatientId] = useState(isNew ? Number(patientIdFromQuery) : null)
+  const [patientName, setPatientName] = useState('')
+  const [transcript, setTranscript] = useState([])
+  const [summary, setSummary] = useState(null)
+  const [shareWithPatient, setShareWithPatient] = useState(false)
+  const [speaker, setSpeaker] = useState('clinician')
+  const [elapsed, setElapsed] = useState(0)
+  const [savingField, setSavingField] = useState('')
+
+  const recognitionRef = useRef(null)
+  const speakerRef = useRef('clinician')
+  const transcriptRef = useRef([])
+  const flushedCountRef = useRef(0)
+  const timerRef = useRef(null)
+  const flushTimerRef = useRef(null)
+
+  useEffect(() => { speakerRef.current = speaker }, [speaker])
+  useEffect(() => { transcriptRef.current = transcript }, [transcript])
+
+  useEffect(() => {
+    let cancelled = false
+    async function init() {
+      setLoading(true)
+      try {
+        if (isNew) {
+          const created = await api.post('/api/scribe/sessions', { patient_id: Number(patientIdFromQuery) }, token)
+          if (!created || !created.session_id) throw new Error('create failed')
+          if (cancelled) return
+          setRealSessionId(created.session_id)
+          setPatientId(created.patient_id)
+          setPatientName(created.patient_name)
+        } else {
+          const data = await api.get(`/api/scribe/sessions/${sessionId}`, token)
+          if (!data || !data.id) throw new Error('not found')
+          if (cancelled) return
+          setRealSessionId(data.id)
+          setPatientId(data.patient_id)
+          setPatientName(data.patient_name)
+          setTranscript(data.transcript || [])
+          transcriptRef.current = data.transcript || []
+          flushedCountRef.current = (data.transcript || []).length
+          setSummary(data.summary)
+          setShareWithPatient(data.share_with_patient)
+          if (data.status === 'completed') setUiState('completed')
+        }
+      } catch {
+        if (!cancelled) setError('Unable to load this session.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    init()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      stopRecognition()
+      if (timerRef.current) clearInterval(timerRef.current)
+      if (flushTimerRef.current) clearInterval(flushTimerRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function stopRecognition() {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop() } catch { /* already stopped */ }
+      recognitionRef.current = null
+    }
+  }
+
+  async function flushTranscript() {
+    const all = transcriptRef.current
+    const newLines = all.slice(flushedCountRef.current)
+    if (newLines.length === 0 || !realSessionId) return
+    flushedCountRef.current = all.length
+    try {
+      await api.post(`/api/scribe/sessions/${realSessionId}/transcript`, { lines: newLines }, token)
+    } catch {
+      flushedCountRef.current -= newLines.length
+    }
+  }
+
+  function handleStartRecording() {
+    if (!SpeechRecognitionCtor) {
+      setError('Voice recognition is not supported in this browser.')
+      return
+    }
+    setUiState('recording')
+    setElapsed(0)
+
+    timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000)
+    flushTimerRef.current = setInterval(() => flushTranscript(), 30000)
+
+    const recognition = new SpeechRecognitionCtor()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+
+    recognition.onresult = event => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i]
+        if (result.isFinal) {
+          const line = { speaker: speakerRef.current, text: result[0].transcript.trim(), timestamp: new Date().toISOString() }
+          if (line.text) {
+            const next = [...transcriptRef.current, line]
+            transcriptRef.current = next
+            setTranscript(next)
+            if (next.length - flushedCountRef.current >= 10) flushTranscript()
+          }
+        }
+      }
+    }
+
+    recognition.onerror = () => { /* keep recording UI; browser will fire onend */ }
+    recognition.onend = () => {
+      if (recognitionRef.current) {
+        try { recognition.start() } catch { /* session ended */ }
+      }
+    }
+
+    recognitionRef.current = recognition
+    recognition.start()
+  }
+
+  async function handleEndSession() {
+    stopRecognition()
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (flushTimerRef.current) clearInterval(flushTimerRef.current)
+    setUiState('processing')
+    await flushTranscript()
+    try {
+      const data = await api.post(`/api/scribe/sessions/${realSessionId}/summarise`, {}, token)
+      setSummary(data.summary)
+      setUiState('completed')
+    } catch {
+      setError('Could not generate summary. Please try again.')
+      setUiState('recording')
+    }
+  }
+
+  function handleSummaryChange(key, value) {
+    setSummary(prev => ({ ...prev, [key]: value }))
+  }
+
+  async function handleSummaryBlur(key) {
+    setSavingField(key)
+    try {
+      await api.patch(`/api/scribe/sessions/${realSessionId}`, { summary: { [key]: summary[key] } }, token)
+    } finally {
+      setSavingField('')
+    }
+  }
+
+  async function handleToggleShare() {
+    const next = !shareWithPatient
+    setShareWithPatient(next)
+    await api.patch(`/api/scribe/sessions/${realSessionId}`, { share_with_patient: next }, token)
+  }
+
+  function handleApprove() {
+    navigate(`/clinician/patients/${patientId}`)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0A1628' }}>
+        <span className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Loading session…</span>
+      </div>
+    )
+  }
+
+  if (error && uiState !== 'recording') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: '#0A1628' }}>
+        <span className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{error}</span>
+        <button className="btn-mint" onClick={() => navigate(-1)}>Go Back</button>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),#F4F7F9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
-      <div style={{ position: 'relative', overflow: 'hidden', width: '100%', maxWidth: 1280, height: 840, borderRadius: 26, background: 'radial-gradient(760px 460px at 100% -6%,rgba(45,212,160,0.10),transparent 55%),#0A1628', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 1px 2px rgba(16,24,40,0.1),0 40px 72px -20px rgba(16,24,40,0.45)', display: 'flex', flexDirection: 'column', color: '#fff' }}>
-
-        {/* Top bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 26px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 14px', borderRadius: 11, background: 'rgba(240,68,56,0.12)', border: '1px solid rgba(240,68,56,0.3)' }}>
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#F04438', animation: 'recblink 1.4s infinite', flexShrink: 0 }} />
-              <span style={{ fontSize: 13, fontWeight: 800, color: '#FF6B5E', letterSpacing: '0.02em' }}>Recording</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#FF6B5E', fontVariantNumeric: 'tabular-nums' }}>{timer}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 12.5, fontWeight: 500, color: 'rgba(255,255,255,0.55)' }}>
-              <span><span style={{ color: 'rgba(255,255,255,0.4)' }}>Patient</span> &nbsp;<b style={{ color: '#fff', fontWeight: 700 }}>Sarah Mitchell</b></span>
-              <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
-              <span><span style={{ color: 'rgba(255,255,255,0.4)' }}>Clinician</span> &nbsp;<b style={{ color: '#fff', fontWeight: 700 }}>Dr. Alan Reed</b></span>
-              <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
-              <span><span style={{ color: 'rgba(255,255,255,0.4)' }}>Session</span> &nbsp;<b style={{ color: '#fff', fontWeight: 700 }}>Jul 1, 2026 · Follow-up</b></span>
-            </div>
+    <div className="min-h-screen" style={{ background: '#0A1628', color: '#fff' }}>
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Patient info bar */}
+        <div className="glass-card p-4 mb-5 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-4 flex-wrap text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            <span>Patient &nbsp;<b style={{ color: '#fff' }}>{patientName || '—'}</b></span>
+            {uiState === 'recording' && (
+              <>
+                <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.15)' }} />
+                <span className="inline-flex items-center gap-2" style={{ color: '#FF6B5E', fontWeight: 700 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F04438', animation: 'recblink 1.4s infinite' }} />
+                  Recording {formatTimer(elapsed)}
+                </span>
+              </>
+            )}
           </div>
-          <button style={{ display: 'flex', alignItems: 'center', gap: 8, height: 38, padding: '0 16px', borderRadius: 11, background: 'rgba(240,68,56,0.16)', color: '#FF6B5E', fontSize: 13, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid rgba(240,68,56,0.3)' }}>
-            <span style={{ width: 9, height: 9, borderRadius: 2, background: '#FF6B5E', flexShrink: 0 }} />Stop &amp; save
-          </button>
+          {uiState === 'recording' && (
+            <button className="btn-ghost-dark" onClick={handleEndSession}>End Session</button>
+          )}
         </div>
 
-        {/* Two columns */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 0 }}>
+        {uiState === 'idle' && (
+          <div className="glass-card glow-br flex flex-col items-center justify-center gap-6" style={{ padding: '80px 24px' }}>
+            <div className="text-white/60 text-sm">Ready to record your session with {patientName}</div>
+            <button className="btn-mint" style={{ height: 56, padding: '0 32px', fontSize: 15 }} onClick={handleStartRecording}>
+              Start Recording
+            </button>
+            {error && <div className="text-red-400 text-xs">{error}</div>}
+          </div>
+        )}
 
-          {/* Live Transcript */}
-          <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(255,255,255,0.07)', minHeight: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px 12px' }}>
-              <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-0.01em' }}>Live Transcript</div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, fontWeight: 700, color: '#2DD4A0' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2DD4A0', animation: 'onlinepulse 2s infinite', flexShrink: 0 }} />Transcribing
+        {uiState === 'recording' && (
+          <div className="glass-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-bold">Live Transcript</div>
+              <div className="flex gap-2">
+                <button
+                  className="text-xs font-bold rounded-lg py-2 px-4 transition-all duration-200"
+                  style={{ background: speaker === 'clinician' ? '#2DD4A0' : 'rgba(255,255,255,0.05)', color: speaker === 'clinician' ? '#06231B' : 'rgba(255,255,255,0.5)' }}
+                  onClick={() => setSpeaker('clinician')}
+                >👨‍⚕️ Clinician</button>
+                <button
+                  className="text-xs font-bold rounded-lg py-2 px-4 transition-all duration-200"
+                  style={{ background: speaker === 'patient' ? '#2DD4A0' : 'rgba(255,255,255,0.05)', color: speaker === 'patient' ? '#06231B' : 'rgba(255,255,255,0.5)' }}
+                  onClick={() => setSpeaker('patient')}
+                >🧑 Patient</button>
               </div>
             </div>
-            <div style={{ flex: 1, overflow: 'hidden', padding: '6px 24px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {TRANSCRIPT.map((t, i) => (
-                <div key={i} style={{ maxWidth: '90%', alignSelf: t.isClinician ? 'flex-start' : 'flex-end' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5, justifyContent: t.isClinician ? 'flex-start' : 'flex-end' }}>
-                    {!t.isClinician && <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.3)', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{t.time}</span>}
-                    <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: t.isClinician ? '#2DD4A0' : 'rgba(255,255,255,0.55)' }}>{t.speaker}</span>
-                    {t.isClinician && <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.3)', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{t.time}</span>}
-                  </div>
-                  <div style={{ fontSize: 13.5, lineHeight: 1.55, color: t.isClinician ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.82)', background: t.isClinician ? 'rgba(45,212,160,0.1)' : 'rgba(255,255,255,0.05)', border: t.isClinician ? '1px solid rgba(45,212,160,0.18)' : '1px solid rgba(255,255,255,0.08)', padding: '11px 14px', borderRadius: t.isClinician ? '4px 14px 14px 14px' : '14px 4px 14px 14px' }}>
-                    {t.text}
-                    {t.cursor && <span style={{ display: 'inline-block', width: 8, height: 15, background: '#2DD4A0', borderRadius: 1, verticalAlign: -2, marginLeft: 3, animation: 'recblink 1s infinite' }} />}
-                  </div>
+            <div className="flex flex-col gap-3" style={{ maxHeight: 420, overflowY: 'auto' }}>
+              {transcript.length === 0 && (
+                <div className="text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>Listening… speak naturally, toggle the speaker as the conversation switches.</div>
+              )}
+              {transcript.map((line, i) => (
+                <div key={i}>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{formatClock(line.timestamp)}</span>{' '}
+                  <span className="text-sm" style={{ color: line.speaker === 'clinician' ? '#2DD4A0' : 'rgba(255,255,255,0.7)' }}>
+                    {line.text}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
+        )}
 
-          {/* AI Summary */}
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, background: 'rgba(255,255,255,0.015)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px 12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                <div style={{ width: 24, height: 24, borderRadius: 7, background: '#050d18', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(45,212,160,0.3)' }}>
-                  <div style={{ width: 8, height: 8, background: '#2DD4A0', transform: 'rotate(45deg)', borderRadius: 1 }} />
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-0.01em' }}>AI-Generated Summary</div>
+        {uiState === 'processing' && (
+          <div className="glass-card flex flex-col items-center justify-center gap-4" style={{ padding: '100px 24px' }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid rgba(45,212,160,0.18)', borderTopColor: '#2DD4A0', animation: 'rsl-spin 0.8s linear infinite' }} />
+            <style>{'@keyframes rsl-spin { to { transform: rotate(360deg); } }'}</style>
+            <div className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>Generating AI summary...</div>
+          </div>
+        )}
+
+        {uiState === 'completed' && summary && (
+          <div className="grid gap-5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+            {/* Left: transcript */}
+            <div className="glass-card p-5">
+              <div className="text-sm font-bold mb-4">Transcript</div>
+              <div className="flex flex-col gap-3" style={{ maxHeight: 560, overflowY: 'auto' }}>
+                {transcript.map((line, i) => (
+                  <div key={i}>
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{formatClock(line.timestamp)}</span>{' '}
+                    <span className="text-sm" style={{ color: line.speaker === 'clinician' ? '#2DD4A0' : 'rgba(255,255,255,0.7)' }}>
+                      {line.text}
+                    </span>
+                  </div>
+                ))}
+                {transcript.length === 0 && (
+                  <div className="text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>No transcript recorded.</div>
+                )}
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>Updating live</span>
             </div>
 
-            <div style={{ flex: 1, overflow: 'hidden', padding: '6px 24px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 7 }}>Chief concern</div>
-                <div style={{ fontSize: 13.5, lineHeight: 1.5, color: 'rgba(255,255,255,0.88)' }}>Follow-up on sleep disturbance and work-related stress management.</div>
-              </div>
-              <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 9 }}>Resilience indicators</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {INDICATORS.map(ind => (
-                    <div key={ind.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.8)', flex: 1 }}>{ind.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: ind.color, fontVariantNumeric: 'tabular-nums' }}>{ind.value}</span>
+            {/* Right: editable summary */}
+            <div className="glass-card p-5">
+              <div className="text-sm font-bold mb-4">AI-Generated Summary</div>
+              <div className="flex flex-col gap-4">
+                {SUMMARY_FIELDS.map(f => (
+                  <div key={f.key}>
+                    <div className="label-eyebrow mb-1.5 flex items-center justify-between">
+                      <span>{f.label}</span>
+                      {savingField === f.key && <span style={{ color: '#2DD4A0' }}>Saving…</span>}
                     </div>
-                  ))}
-                </div>
+                    <textarea
+                      className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 focus:border-mint focus:ring-1 focus:ring-mint"
+                      style={{ resize: 'vertical', minHeight: 60 }}
+                      value={summary[f.key] || ''}
+                      onChange={e => handleSummaryChange(f.key, e.target.value)}
+                      onBlur={() => handleSummaryBlur(f.key)}
+                    />
+                  </div>
+                ))}
               </div>
-              <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 7 }}>Suggested plan</div>
-                <div style={{ fontSize: 13.5, lineHeight: 1.55, color: 'rgba(255,255,255,0.88)' }}>Continue current sleep protocol. Reinforce breathing exercise as primary deadline-stress tool. Reassess in 2 weeks.</div>
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', gap: 12, padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-              <button style={{ flex: 1, height: 44, border: 'none', borderRadius: 12, background: '#2DD4A0', color: '#06352a', fontSize: 13.5, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 8px 20px -6px rgba(45,212,160,0.6)' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06352a" strokeWidth="2.6"><path d="M20 6L9 17l-5-5"/></svg>
-                Approve &amp; save to record
-              </button>
-              <button style={{ width: 110, height: 44, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 12, background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
-                Edit
-              </button>
+              <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  <input type="checkbox" checked={shareWithPatient} onChange={handleToggleShare} />
+                  Share with Patient
+                </label>
+              </div>
+
+              <button className="btn-mint w-full mt-4" onClick={handleApprove}>Approve &amp; Save</button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
