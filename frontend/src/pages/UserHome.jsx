@@ -1,12 +1,63 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { api } from '../lib/api'
+
+function greeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning,'
+  if (hour < 18) return 'Good afternoon,'
+  return 'Good evening,'
+}
+
+function initialsOf(name) {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/)
+  return parts.slice(0, 2).map(p => p[0]?.toUpperCase()).join('')
+}
+
+function daysUntil(dueDate) {
+  const diffMs = new Date(dueDate) - new Date()
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+}
+
+function dueLabel(item) {
+  if (item.assignment_status === 'overdue') return 'Overdue'
+  if (!item.due_date) return 'Ready to start'
+  const days = daysUntil(item.due_date)
+  if (days <= 0) return 'Due today'
+  if (days === 1) return 'Due tomorrow'
+  return `Due in ${days} days`
+}
 
 export default function UserHome() {
   const navigate = useNavigate()
+  const { user, token } = useAuth()
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    api.get('/api/screenings/my', token)
+      .then(data => { if (!cancelled && Array.isArray(data)) setItems(data) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [token])
+
+  const active = items
+    .filter(i => i.assignment_status !== 'completed')
+    .sort((a, b) => {
+      if (!a.due_date) return 1
+      if (!b.due_date) return -1
+      return new Date(a.due_date) - new Date(b.due_date)
+    })
+  const completed = items.filter(i => i.assignment_status === 'completed')
+
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(900px 520px at 100% -8%,rgba(45,212,160,0.07),transparent 60%),#F4F7F9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
 
       {/* Phone frame — dark #0A1628 */}
-      <div style={{ position: 'relative', overflow: 'hidden', width: 452, height: 912, borderRadius: 34, background: 'radial-gradient(560px 420px at 100% -6%,rgba(45,212,160,0.13),transparent 55%),radial-gradient(520px 460px at -10% 108%,rgba(45,212,160,0.06),transparent 55%),#0A1628', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 1px 2px rgba(16,24,40,0.1),0 40px 72px -20px rgba(16,24,40,0.45)', padding: '26px 22px' }}>
+      <div style={{ position: 'relative', overflow: 'hidden', width: 452, height: 912, borderRadius: 34, background: 'radial-gradient(560px 420px at 100% -6%,rgba(45,212,160,0.13),transparent 55%),radial-gradient(520px 460px at -10% 108%,rgba(45,212,160,0.06),transparent 55%),#0A1628', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 1px 2px rgba(16,24,40,0.1),0 40px 72px -20px rgba(16,24,40,0.45)', padding: '26px 22px', overflowY: 'auto' }}>
 
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px)', backgroundSize: '24px 24px', maskImage: 'radial-gradient(130% 90% at 50% 18%,#000,transparent 92%)', WebkitMaskImage: 'radial-gradient(130% 90% at 50% 18%,#000,transparent 92%)' }} />
 
@@ -15,13 +66,13 @@ export default function UserHome() {
           {/* header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22 }}>
             <div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Good morning,</div>
-              <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.025em', marginTop: 2 }}>Sarah</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{greeting()}</div>
+              <div style={{ fontSize: 25, fontWeight: 800, letterSpacing: '-0.025em', marginTop: 2 }}>{user?.name?.split(' ')[0] || 'there'}</div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 9, fontSize: 11, fontWeight: 700, color: '#2DD4A0', background: 'rgba(45,212,160,0.13)', border: '1px solid rgba(45,212,160,0.22)', padding: '4px 10px', borderRadius: 20 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2DD4A0' }} />CBT Program
               </div>
             </div>
-            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#1d3a5f,#050d18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.12)' }}>SM</div>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#1d3a5f,#050d18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.12)' }}>{initialsOf(user?.name)}</div>
           </div>
 
           {/* insight banner */}
@@ -37,38 +88,73 @@ export default function UserHome() {
           <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 12 }}>Your screenings</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginBottom: 22 }}>
 
-            <div onClick={() => navigate('/screening/1')} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, background: 'rgba(45,212,160,0.08)', border: '1px solid rgba(45,212,160,0.25)', boxShadow: '0 1px 2px rgba(0,0,0,0.2),0 12px 26px -10px rgba(45,212,160,0.35)', cursor: 'pointer' }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(45,212,160,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DD4A0" strokeWidth="2.4"><path d="M12 5v14M5 12h14"/></svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.01em' }}>Weekly Resilience Check</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500, marginTop: 2 }}>8 questions · ~4 min</div>
-              </div>
-              <span style={{ fontSize: 12.5, fontWeight: 800, color: '#06352a', background: '#2DD4A0', padding: '8px 15px', borderRadius: 10, boxShadow: '0 6px 14px -4px rgba(45,212,160,0.6)' }}>Start</span>
-            </div>
+            {loading && (
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Loading your screenings…</div>
+            )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 1px 2px rgba(0,0,0,0.2),0 12px 26px -10px rgba(0,0,0,0.5)', cursor: 'pointer' }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(245,181,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5B544" strokeWidth="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.01em' }}>Sleep &amp; Mood Journal</div>
-                <div style={{ fontSize: 12, color: '#F5B544', fontWeight: 600, marginTop: 2 }}>Due in 2 days</div>
-              </div>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.4"><path d="M9 6l6 6-6 6"/></svg>
-            </div>
+            {!loading && items.length === 0 && (
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>No screenings assigned yet.</div>
+            )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 1px 2px rgba(0,0,0,0.15),0 10px 22px -10px rgba(0,0,0,0.45)', cursor: 'pointer', opacity: 0.82 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DD4A0" strokeWidth="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+            {active.map((item, i) => {
+              const isHero = i === 0
+              const label = dueLabel(item)
+              const isUrgent = item.assignment_status === 'overdue' || (item.due_date && daysUntil(item.due_date) <= 2)
+              return (
+                <div
+                  key={item.screening.id}
+                  onClick={() => navigate(`/screening/${item.screening.id}`)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, cursor: 'pointer',
+                    background: isHero ? 'rgba(45,212,160,0.08)' : 'rgba(255,255,255,0.04)',
+                    border: isHero ? '1px solid rgba(45,212,160,0.25)' : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: isHero
+                      ? '0 1px 2px rgba(0,0,0,0.2),0 12px 26px -10px rgba(45,212,160,0.35)'
+                      : '0 1px 2px rgba(0,0,0,0.2),0 12px 26px -10px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: isHero ? 'rgba(45,212,160,0.2)' : isUrgent ? 'rgba(245,181,68,0.15)' : 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {isHero ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DD4A0" strokeWidth="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isUrgent ? '#F5B544' : 'rgba(255,255,255,0.5)'} strokeWidth="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.01em' }}>{item.screening.title}</div>
+                    <div style={{ fontSize: 12, color: isHero ? 'rgba(255,255,255,0.5)' : isUrgent ? '#F5B544' : 'rgba(255,255,255,0.5)', fontWeight: isUrgent ? 600 : 500, marginTop: 2 }}>
+                      {isHero
+                        ? `${item.screening.estimated_minutes} min · ${item.assignment_status === 'in_progress' ? 'In progress' : label}`
+                        : label}
+                    </div>
+                  </div>
+                  {isHero ? (
+                    <span style={{ fontSize: 12.5, fontWeight: 800, color: '#06352a', background: '#2DD4A0', padding: '8px 15px', borderRadius: 10, boxShadow: '0 6px 14px -4px rgba(45,212,160,0.6)' }}>
+                      {item.assignment_status === 'in_progress' ? 'Continue' : 'Start'}
+                    </span>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.4"><path d="M9 6l6 6-6 6"/></svg>
+                  )}
+                </div>
+              )
+            })}
+
+            {completed.map(item => (
+              <div key={item.screening.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 1px 2px rgba(0,0,0,0.15),0 10px 22px -10px rgba(0,0,0,0.45)', opacity: 0.82 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2DD4A0" strokeWidth="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.85)' }}>{item.screening.title}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.42)', fontWeight: 500, marginTop: 2 }}>
+                    {item.last_result?.completed_at
+                      ? `Completed ${new Date(item.last_result.completed_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                      : 'Completed'}
+                    {item.last_result?.score != null ? ` · Score ${Math.round(item.last_result.score)}` : ''}
+                  </div>
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.85)' }}>Anxiety Baseline (GAD-7)</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.42)', fontWeight: 500, marginTop: 2 }}>Completed Mon · Score 6</div>
-              </div>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>View</span>
-            </div>
+            ))}
           </div>
 
           {/* AI copilot CTA */}

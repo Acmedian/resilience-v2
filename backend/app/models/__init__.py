@@ -3,6 +3,7 @@ from app.models import (  # noqa: F401
     patient,
     question,
     result,
+    screening,
     scribe_session,
     survey,
     unit,

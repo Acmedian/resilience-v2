@@ -6,7 +6,8 @@ import RoleRoute from './components/auth/RoleRoute'
 import AdminDashboard from './pages/AdminDashboard'
 import Login from './pages/Login'
 import UserHome from './pages/UserHome'
-import VoiceSurvey from './pages/VoiceSurvey'
+import VoiceScreening from './pages/VoiceScreening'
+import ScreeningComplete from './pages/ScreeningComplete'
 import MedicalScribe from './pages/MedicalScribe'
 import AdminQuestions from './pages/AdminQuestions'
 import PatientList from './pages/PatientList'
@@ -42,7 +43,8 @@ function AnimatedRoutes() {
           <Route path="/" element={<RoleHomeRedirect />} />
 
           <Route path="/home" element={<RoleRoute allowedRoles={['patient']}><UserHome /></RoleRoute>} />
-          <Route path="/screening/:id" element={<RoleRoute allowedRoles={['patient']}><VoiceSurvey /></RoleRoute>} />
+          <Route path="/screening/:id" element={<RoleRoute allowedRoles={['patient']}><VoiceScreening /></RoleRoute>} />
+          <Route path="/screening/:id/complete" element={<RoleRoute allowedRoles={['patient']}><ScreeningComplete /></RoleRoute>} />
 
           <Route path="/clinician/patients" element={<RoleRoute allowedRoles={['clinician']}><PatientList /></RoleRoute>} />
           <Route path="/clinician/scribe/:sessionId" element={<RoleRoute allowedRoles={['clinician']}><MedicalScribe /></RoleRoute>} />
